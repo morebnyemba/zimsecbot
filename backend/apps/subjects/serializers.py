@@ -6,13 +6,13 @@ from .models import StudentSubject, Subject, Subtopic, Topic
 class SubtopicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subtopic
-        fields = ["id", "name", "order"]
+        fields = ["id", "topic", "name", "order"]
 
 
 class TopicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Topic
-        fields = ["id", "name", "order"]
+        fields = ["id", "subject", "name", "order"]
 
 
 class SubjectSerializer(serializers.ModelSerializer):
