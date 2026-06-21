@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from rest_framework.test import APIClient
 
 User = get_user_model()
 
@@ -30,3 +31,41 @@ def test_student_profile_one_to_one():
     )
     assert profile.user == user
     assert str(profile) == f"Profile<{user.email}>"
+
+
+@pytest.mark.django_db
+def test_register_endpoint():
+    client = APIClient()
+    response = client.post(
+        "/api/v1/auth/register/",
+        {"email": "new@example.com", "password": "testpass123"},
+    )
+    assert response.status_code == 201
+    assert User.objects.filter(email="new@example.com").exists()
+
+
+@pytest.mark.django_db
+def test_my_profile_get_and_update():
+    user = User.objects.create_user(email="me@example.com", password="testpass123")
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    response = client.get("/api/v1/profile/me/")
+    assert response.status_code == 200
+
+    response = client.patch("/api/v1/profile/me/", {"school_name": "Harare High"})
+    assert response.status_code == 200
+    assert response.data["school_name"] == "Harare High"
+
+
+@pytest.mark.django_db
+def test_logout_blacklists_refresh_token():
+    from rest_framework_simplejwt.tokens import RefreshToken
+
+    user = User.objects.create_user(email="out@example.com", password="testpass123")
+    refresh = RefreshToken.for_user(user)
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    response = client.post("/api/v1/auth/logout/", {"refresh": str(refresh)})
+    assert response.status_code == 205
