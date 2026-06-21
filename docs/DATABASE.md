@@ -2,6 +2,8 @@
 
 PostgreSQL is the system of record. `pgvector` extension is used for embeddings (no separate vector DB needed at launch scale).
 
+> **Billing/monetization models** (`Plan`, `Subscription`, `Payment`, `UsageRecord`, `School`, `SchoolSeat`) are documented separately in `MONETIZATION.md` §5 to keep that domain's ERD and rationale together. They relate to `USER` via `Subscription.user_id` / `SchoolSeat.user_id` exactly as any other FK in this document.
+
 ## 1. Entity Relationship Diagram
 
 ```mermaid

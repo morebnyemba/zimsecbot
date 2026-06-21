@@ -21,6 +21,7 @@ flowchart TB
     subgraph Backend["Django + DRF Backend"]
         API[REST API Layer]
         AUTH[JWT Auth & RBAC]
+        GATE[AccessGate - billing/quota gating]
         SVC[Service Layer]
         WHATSAPP_SVC[WhatsApp Service]
         AI_SVC[AI Tutor Service]
@@ -42,6 +43,7 @@ flowchart TB
     subgraph External
         META[WhatsApp Cloud API]
         GEMINI[Google Gemini API]
+        PAYNOW[Paynow - EcoCash/OneMoney/Card]
     end
 
     WEB --> NGINX
@@ -50,7 +52,8 @@ flowchart TB
     META <--> NGINX
     NGINX --> API
     API --> AUTH
-    API --> SVC
+    AUTH --> GATE
+    GATE --> SVC
     SVC --> WHATSAPP_SVC
     SVC --> AI_SVC
     AI_SVC --> RAG
@@ -58,6 +61,9 @@ flowchart TB
     RAG --> PG
     AI_SVC --> GEMINI
     WHATSAPP_SVC --> META
+    GATE --> REDIS
+    GATE --> PG
+    SVC --> PAYNOW
     SVC --> PG
     SVC --> REDIS
     SVC --> S3
@@ -67,6 +73,7 @@ flowchart TB
     CELERY --> REDIS
     CELERY --> GEMINI
     CELERY --> META
+    CELERY --> PAYNOW
 ```
 
 ## 3. Service Architecture (Modular Django Apps)
@@ -89,8 +96,10 @@ backend/
 │   ├── knowledge_base/                # documents, embeddings, RAG retrieval
 │   ├── whatsapp/                       # webhook, message router, conversation state
 │   ├── conversations/                   # shared conversation/message models (web+WA)
-│   ├── files/                             # secure upload/storage abstraction
-│   └── audit/                              # audit logs, request/event logging
+│   ├── billing/                           # plans, subscriptions, payments, AccessGate
+│   ├── schools/                             # institutional licensing, seats, class analytics
+│   ├── files/                                 # secure upload/storage abstraction
+│   └── audit/                                  # audit logs, request/event logging
 └── common/                  # shared base models, permissions, pagination, exceptions
 ```
 
@@ -98,6 +107,7 @@ backend/
 - Subjects/Topics/Subtopics are rows in the database, editable from the admin portal — no hardcoded subject logic. Tier (1/2/3) is a field, not a code branch.
 - Each app exposes a `services.py` with the business logic; views/serializers stay thin.
 - Cross-channel reuse: `whatsapp` and the public API both call the same `ai_tutor`, `quizzes`, `study_plans` services — channel-specific code only formats input/output.
+- Plans/quotas (`billing.Plan`) are also data, not code — pricing and feature entitlements change without a deploy (see `MONETIZATION.md`).
 
 ## 4. AI Architecture (Summary — see AI_ARCHITECTURE.md for detail)
 
@@ -187,8 +197,15 @@ sequenceDiagram
 ## 9. Security Architecture
 
 - JWT access/refresh tokens; refresh rotation; short-lived access tokens.
-- RBAC roles: `student`, `content_admin`, `superadmin`, `support`.
+- RBAC roles: `student`, `content_admin`, `superadmin`, `support`, `school_admin`.
 - Rate limiting at Nginx + DRF throttling (per-user and per-IP), especially on AI Tutor and auth endpoints.
-- WhatsApp webhook signature verification (Meta `X-Hub-Signature-256`).
-- All secrets via environment variables / Coolify secret store — never committed.
-- Audit log app records sensitive actions (content changes, admin logins, data exports).
+- WhatsApp webhook signature verification (Meta `X-Hub-Signature-256`); Paynow webhook signature verification on the billing side.
+- All secrets via environment variables / Coolify secret store — never committed. Payment provider keys additionally encrypted at rest (see `MONETIZATION.md` §6).
+- Audit log app records sensitive actions (content changes, admin logins, data exports, subscription/payment events).
+
+## 10. Monetization & Access Gating (Summary — see MONETIZATION.md for detail)
+
+- **Freemium model**: a `billing` app holds data-driven `Plan`/`Subscription`/`Payment` records; entitlements (which features, which quotas) are configuration, not code.
+- **Gating is channel-agnostic**: a single `AccessGate` service is invoked as a DRF permission class on the web API and as a flow-guard action in the WhatsApp flow engine — both paths share one entitlement check, avoiding the two-implementations problem seen in the sibling repos' WhatsApp clients (`REPOSITORY_ANALYSIS.md`).
+- **Hot-path performance**: entitlements and usage quotas are cached/counted in Redis and reconciled to Postgres asynchronously, so gating checks don't add meaningful latency to every request.
+- **Payments**: Paynow (EcoCash/OneMoney/card), reusing the provider-integration pattern already present in `hanna`/`Kali-Safaris`.

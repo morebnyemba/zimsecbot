@@ -102,6 +102,24 @@
 
 ---
 
+## Phase 7.5 — Monetization & Gating
+
+See `MONETIZATION.md` for full detail.
+
+**Deliverables**:
+- `billing` app: `Plan`, `Subscription`, `Payment`, `UsageRecord` models; `schools` app: `School`, `SchoolSeat`.
+- Shared `AccessGate` service + DRF permission class, wired into gated web API endpoints (AI Tutor, paper downloads, quiz quotas).
+- WhatsApp gating action (flow-guard) + upgrade flow (plan selection → Paynow mobile money push → webhook confirmation).
+- Paynow integration (reusing the pattern from `hanna`/`Kali-Safaris` per `REPOSITORY_ANALYSIS.md`), with encrypted credential storage.
+- Admin portal: plan/quota management UI, school onboarding + seat assignment UI.
+- Free-tier quotas tuned to remain genuinely useful (acquisition/retention), not crippled.
+
+**Dependencies**: Phase 2 (features to gate), Phase 6 (AI Tutor, the highest-value gated feature), Phase 5 (WhatsApp upgrade flow).
+**Risks**: Payment webhook reliability (mitigate with a reconciliation job re-checking pending payments); mobile-money UX friction — validate the WhatsApp upgrade flow with real EcoCash/OneMoney prompts early; pricing sensitivity in market — keep Free tier useful while pricing is validated.
+**Estimated Effort**: 2–3 weeks.
+
+---
+
 ## Phase 8 — Production Hardening
 
 **Deliverables**:
@@ -129,6 +147,7 @@
 | 5. WhatsApp Integration | 3 wks | Phase 3/4 (start Meta approval early) |
 | 6. AI Tutor | 4–5 wks | Tail of Phase 5 |
 | 7. Analytics | 2 wks | Tail of Phase 6 |
+| 7.5. Monetization & Gating | 2–3 wks | Tail of Phase 6/7 |
 | 8. Production Hardening | 2–3 wks | — |
 
-**Total** (with reasonable overlap): roughly **16–20 weeks** for a single small team to reach production readiness for Tier 1 subjects, before Tier 2/3 subject content expansion (data entry, not engineering work, given the data-driven subject model).
+**Total** (with reasonable overlap): roughly **18–22 weeks** for a single small team to reach production readiness for Tier 1 subjects, before Tier 2/3 subject content expansion (data entry, not engineering work, given the data-driven subject model).

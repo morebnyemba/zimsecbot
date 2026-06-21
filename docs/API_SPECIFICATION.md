@@ -110,6 +110,25 @@ Base URL: `/api/v1/`. All endpoints return JSON. Auth via JWT bearer tokens unle
 | GET | `/analytics/trends/` | Score trend over time (chart-ready series) |
 | GET | `/analytics/streaks/` | Current/longest study streak |
 
+## 7a. Billing & Gating (see MONETIZATION.md §7 for full detail)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/billing/plans/` | List active plans (public) |
+| GET | `/billing/subscription/` | Current user's subscription + entitlements |
+| POST | `/billing/subscribe/` | Start a subscription/payment for a plan |
+| POST | `/billing/webhook/paynow/` | Paynow payment confirmation webhook (signature-verified, not JWT) |
+| POST | `/billing/cancel/` | Cancel auto-renew |
+| GET | `/billing/usage/` | Current usage vs. quota for gated features |
+| POST | `/schools/` | Create a school (institutional onboarding, admin-only) |
+| POST | `/schools/{id}/seats/` | Assign/revoke a student seat |
+| GET | `/schools/{id}/analytics/` | Class-level performance analytics (School tier) |
+
+Any endpoint can be feature-gated by plan/quota (e.g. `/papers/{id}/download/`, `/ai-tutor/sessions/{id}/messages/`). A blocked request returns `402`-style error with an `upgrade_url`:
+```json
+{ "error": { "code": "feature_locked", "message": "Daily AI Tutor limit reached on Free plan", "upgrade_url": "/billing/plans/" } }
+```
+
 ## 8. AI Tutor
 
 | Method | Endpoint | Description |
@@ -152,8 +171,9 @@ Not part of the public API surface; secured via Meta app secret + HMAC signature
 ## 11. Authentication & Permissions
 
 - All non-public endpoints require `Authorization: Bearer <access_token>`.
-- Roles: `student` (default), `content_admin`, `superadmin`, `support`. Enforced via DRF permission classes per viewset.
-- Object-level permissions: students can only read/write their own `QuizAttempt`, `StudyPlan`, `AISession`, profile.
+- Roles: `student` (default), `content_admin`, `superadmin`, `support`, `school_admin`. Enforced via DRF permission classes per viewset.
+- Object-level permissions: students can only read/write their own `QuizAttempt`, `StudyPlan`, `AISession`, profile, `Subscription`.
+- Plan/quota permissions: gated endpoints additionally run the shared `AccessGate` permission class (see `MONETIZATION.md` §4) on top of role/object checks.
 
 ## 12. Error Handling
 
@@ -166,6 +186,7 @@ Standard error envelope:
 |---|---|
 | 400 | Validation error |
 | 401 | Missing/invalid/expired token |
+| 402 | Feature/quota locked by current plan (`feature_locked`, see `MONETIZATION.md`) |
 | 403 | Authenticated but not permitted (role/object ownership) |
 | 404 | Resource not found |
 | 429 | Rate limited (per-user or per-IP, DRF throttling) |
