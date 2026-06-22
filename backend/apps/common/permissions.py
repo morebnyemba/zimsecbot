@@ -18,3 +18,21 @@ class IsOwner(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return getattr(obj, "user_id", None) == request.user.id
+
+
+class IsSuperadmin(BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated
+            and request.user.role == request.user.Role.SUPERADMIN
+        )
+
+
+class IsContentAdminOrSuperadmin(BasePermission):
+    """Restricts all methods (including reads) to content_admin/superadmin roles."""
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role in (
+            request.user.Role.CONTENT_ADMIN,
+            request.user.Role.SUPERADMIN,
+        )

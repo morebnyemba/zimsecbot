@@ -1,13 +1,14 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 
+from apps.common.mixins import AuditLoggedViewSetMixin
 from apps.common.permissions import IsContentAdmin
 
 from .models import Note
 from .serializers import NoteSerializer
 
 
-class NoteViewSet(viewsets.ModelViewSet):
+class NoteViewSet(AuditLoggedViewSetMixin, viewsets.ModelViewSet):
     queryset = Note.objects.select_related("subject", "topic", "subtopic").all()
     serializer_class = NoteSerializer
     permission_classes = [IsContentAdmin]

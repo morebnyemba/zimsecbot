@@ -3,13 +3,20 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.common.mixins import AuditLoggedViewSetMixin
 from apps.common.permissions import IsContentAdmin
 
-from .models import PastPaper
-from .serializers import PastPaperSerializer
+from .models import MarkingScheme, PastPaper
+from .serializers import MarkingSchemeSerializer, PastPaperSerializer
 
 
-class PastPaperViewSet(viewsets.ModelViewSet):
+class MarkingSchemeViewSet(AuditLoggedViewSetMixin, viewsets.ModelViewSet):
+    queryset = MarkingScheme.objects.all()
+    serializer_class = MarkingSchemeSerializer
+    permission_classes = [IsContentAdmin]
+
+
+class PastPaperViewSet(AuditLoggedViewSetMixin, viewsets.ModelViewSet):
     queryset = PastPaper.objects.select_related("subject", "marking_scheme").all()
     serializer_class = PastPaperSerializer
     permission_classes = [IsContentAdmin]

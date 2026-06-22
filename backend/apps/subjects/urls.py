@@ -6,11 +6,15 @@ from .views import (
     MyStudentSubjectsView,
     SubjectTopicListView,
     SubjectViewSet,
+    SubtopicViewSet,
     TopicSubtopicListView,
+    TopicViewSet,
 )
 
 router = DefaultRouter()
 router.register("subjects", SubjectViewSet, basename="subject")
+router.register("topics", TopicViewSet, basename="topic")
+router.register("subtopics", SubtopicViewSet, basename="subtopic")
 
 urlpatterns = [
     path(

@@ -2,6 +2,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status, viewsets
 from rest_framework.response import Response
 
+from apps.common.mixins import AuditLoggedViewSetMixin
 from apps.common.permissions import IsContentAdmin
 
 from .models import StudentSubject, Subject, Subtopic, Topic
@@ -13,12 +14,28 @@ from .serializers import (
 )
 
 
-class SubjectViewSet(viewsets.ModelViewSet):
+class SubjectViewSet(AuditLoggedViewSetMixin, viewsets.ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
     permission_classes = [IsContentAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["tier", "level", "is_active"]
+
+
+class TopicViewSet(AuditLoggedViewSetMixin, viewsets.ModelViewSet):
+    queryset = Topic.objects.select_related("subject").all()
+    serializer_class = TopicSerializer
+    permission_classes = [IsContentAdmin]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["subject"]
+
+
+class SubtopicViewSet(AuditLoggedViewSetMixin, viewsets.ModelViewSet):
+    queryset = Subtopic.objects.select_related("topic").all()
+    serializer_class = SubtopicSerializer
+    permission_classes = [IsContentAdmin]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["topic"]
 
 
 class SubjectTopicListView(generics.ListAPIView):
