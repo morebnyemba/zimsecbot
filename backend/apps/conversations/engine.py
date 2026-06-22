@@ -678,15 +678,27 @@ def _progress_flow(state, *, text, reply_id):
     return actions
 
 
-# --- Stubbed flows (backend not built yet) --------------------------------------
+# --- AI Tutor flow -----------------------------------------------------------
 
 
 def _ai_tutor_flow(state, *, text, reply_id):
-    body = (
-        "🚧 *Ask AI Tutor* is launching in a future update. "
-        "For now, try *Practice Quiz* or *Revision Notes* from the main menu."
-    )
-    return [{"type": "text", "body": body}, *_show_main_menu(state)]
+    text = (text or "").strip()
+    if not text:
+        return [
+            {
+                "type": "text",
+                "body": (
+                    "🤖 *Ask AI Tutor*\nType your question about Maths, Science, or "
+                    "any STEM topic and I'll do my best to help.\n\n"
+                    "(Reply *menu* anytime to go back.)"
+                ),
+            }
+        ]
+
+    return [{"type": "enqueue_ai_tutor", "phone_number": state.phone_number, "question": text}]
+
+
+# --- Stubbed flows (backend not built yet) --------------------------------------
 
 
 def _study_plan_flow(state, *, text, reply_id):
