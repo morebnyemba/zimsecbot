@@ -14,5 +14,6 @@ django-prometheus==2.3.1
 pgvector==0.3.2
 Pillow==10.4.0
 google-genai==0.3.0
+requests==2.32.3
 gunicorn==23.0.0
 whitenoise==6.7.0
