@@ -59,6 +59,20 @@ def test_my_profile_get_and_update():
 
 
 @pytest.mark.django_db
+def test_auth_me_returns_role():
+    admin = User.objects.create_user(
+        email="admin2@example.com", password="testpass123", role=User.Role.CONTENT_ADMIN
+    )
+    client = APIClient()
+    client.force_authenticate(user=admin)
+
+    response = client.get("/api/v1/auth/me/")
+    assert response.status_code == 200
+    assert response.data["role"] == "content_admin"
+    assert response.data["email"] == "admin2@example.com"
+
+
+@pytest.mark.django_db
 def test_logout_blacklists_refresh_token():
     from rest_framework_simplejwt.tokens import RefreshToken
 

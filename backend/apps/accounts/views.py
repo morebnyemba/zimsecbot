@@ -5,7 +5,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import StudentProfile
-from .serializers import RegisterSerializer, StudentProfileSerializer
+from .serializers import RegisterSerializer, StudentProfileSerializer, UserSerializer
 
 
 class RegisterView(generics.CreateAPIView):
@@ -25,6 +25,13 @@ class LogoutView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(status=status.HTTP_205_RESET_CONTENT)
+
+
+class MeView(generics.RetrieveAPIView):
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return self.request.user
 
 
 class MyProfileView(generics.RetrieveUpdateAPIView):
