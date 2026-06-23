@@ -162,13 +162,31 @@ def test_full_quiz_flow_happy_path(state, subject, mcq_question):
 
 
 @pytest.mark.django_db
-def test_ai_tutor_is_stubbed(state):
+def test_ai_tutor_prompts_for_question(state):
     handle_inbound_message(state, text="", reply_id=None)
     state.save()
 
     actions = handle_inbound_message(state, text="", reply_id="menu_ai_tutor")
     state.save()
 
-    assert "future update" in actions[0]["body"]
+    assert "ask ai tutor" in actions[0]["body"].lower()
     state.refresh_from_db()
-    assert state.current_flow == ConversationState.Flow.MAIN_MENU
+    assert state.current_flow == ConversationState.Flow.AI_TUTOR
+    assert state.current_step == "ask"
+
+
+@pytest.mark.django_db
+def test_ai_tutor_question_enqueues_action(state):
+    state.current_flow = ConversationState.Flow.AI_TUTOR
+    state.current_step = "ask"
+    state.save()
+
+    actions = handle_inbound_message(state, text="What is photosynthesis?", reply_id=None)
+
+    assert actions == [
+        {
+            "type": "enqueue_ai_tutor",
+            "phone_number": state.phone_number,
+            "question": "What is photosynthesis?",
+        }
+    ]

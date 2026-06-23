@@ -86,3 +86,7 @@ def _dispatch_action(client, to, action):
         client.send_document(to, action["link"], action.get("filename"), action.get("caption"))
     elif kind == "image":
         client.send_image(to, action["link"], action.get("caption"))
+    elif kind == "enqueue_ai_tutor":
+        from apps.ai_tutor.tasks import answer_whatsapp_question
+
+        answer_whatsapp_question.delay(action["phone_number"], action["question"])
