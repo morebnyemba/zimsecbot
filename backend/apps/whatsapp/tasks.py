@@ -90,3 +90,13 @@ def _dispatch_action(client, to, action):
         from apps.ai_tutor.tasks import answer_whatsapp_question
 
         answer_whatsapp_question.delay(action["phone_number"], action["question"])
+    elif kind == "enqueue_subscribe":
+        from apps.billing.tasks import process_whatsapp_subscription
+
+        process_whatsapp_subscription.delay(
+            action["phone_number"],
+            action["user_id"],
+            action["plan_code"],
+            action["method"],
+            action["pay_phone"],
+        )

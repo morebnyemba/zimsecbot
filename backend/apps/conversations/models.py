@@ -14,6 +14,7 @@ class ConversationState(BaseModel):
         AI_TUTOR = "ai_tutor", "AI Tutor"
         STUDY_PLAN = "study_plan", "Study Plan"
         PROGRESS = "progress", "Progress"
+        BILLING = "billing", "Billing"
 
     phone_number = models.CharField(max_length=20, unique=True)
     user = models.ForeignKey(

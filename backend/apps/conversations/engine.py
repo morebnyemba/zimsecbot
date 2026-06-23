@@ -14,6 +14,8 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 
 from apps.analytics.models import Recommendation, StudyStreak
+from apps.billing.models import Plan
+from apps.billing.services import AccessDenied, AccessGate
 from apps.notes.models import Note
 from apps.papers.models import PastPaper
 from apps.questions.models import Question
@@ -691,7 +693,99 @@ def _ai_tutor_flow(state, *, text, reply_id):
             }
         ]
 
+    try:
+        AccessGate.check(state.user, "ai_tutor")
+    except AccessDenied as exc:
+        return _start_billing_flow(state, exc.message)
+
     return [{"type": "enqueue_ai_tutor", "phone_number": state.phone_number, "question": text}]
+
+
+# --- Billing / upgrade flow ---------------------------------------------------
+
+
+def _start_billing_flow(state, denial_message):
+    state.current_flow = ConversationState.Flow.BILLING
+    state.current_step = "choose_plan"
+    state.context = {}
+    plans = list(Plan.objects.filter(is_active=True).exclude(code="free").order_by("price"))
+    if not plans:
+        state.reset_to_main_menu()
+        return [{"type": "text", "body": denial_message}, *_show_main_menu(state)]
+
+    rows = [
+        {"id": f"plan_{plan.code}", "title": f"{plan.name} (${plan.price})"} for plan in plans
+    ]
+    return [
+        {"type": "text", "body": f"🔒 {denial_message}\nUpgrade to keep going:"},
+        {
+            "type": "list",
+            "body": "Choose a plan to subscribe:",
+            "button_text": "Choose",
+            "rows": rows,
+            "section_title": "Plans",
+        },
+    ]
+
+
+def _billing_flow(state, *, text, reply_id):
+    step = state.current_step
+
+    if step == "choose_plan":
+        if not reply_id or not reply_id.startswith("plan_"):
+            return [{"type": "text", "body": "Please choose a plan from the list above."}]
+        plan_code = reply_id.removeprefix("plan_")
+        if not Plan.objects.filter(code=plan_code, is_active=True).exists():
+            return [{"type": "text", "body": "That plan isn't available. Please pick another."}]
+        state.context["plan_code"] = plan_code
+        state.current_step = "choose_method"
+        return [
+            {
+                "type": "buttons",
+                "body": "Which mobile money service would you like to pay with?",
+                "buttons": [
+                    {"id": "method_ecocash", "title": "EcoCash"},
+                    {"id": "method_onemoney", "title": "OneMoney"},
+                ],
+            }
+        ]
+
+    if step == "choose_method":
+        if reply_id not in ("method_ecocash", "method_onemoney"):
+            return [{"type": "text", "body": "Please choose EcoCash or OneMoney."}]
+        state.context["method"] = reply_id.removeprefix("method_")
+        state.current_step = "enter_phone"
+        return [
+            {
+                "type": "text",
+                "body": "Enter the mobile money phone number to pay from (e.g. 0771234567):",
+            }
+        ]
+
+    if step == "enter_phone":
+        phone = (text or "").strip()
+        if not phone or not phone.replace("+", "").isdigit():
+            return [{"type": "text", "body": "Please enter a valid phone number."}]
+        plan_code = state.context.get("plan_code")
+        method = state.context.get("method")
+        action = {
+            "type": "enqueue_subscribe",
+            "phone_number": state.phone_number,
+            "user_id": str(state.user_id),
+            "plan_code": plan_code,
+            "method": method,
+            "pay_phone": phone,
+        }
+        state.reset_to_main_menu()
+        return [
+            {
+                "type": "text",
+                "body": "📲 Sending you a payment prompt now, please check your phone...",
+            },
+            action,
+        ]
+
+    return _show_main_menu(state)
 
 
 # --- Stubbed flows (backend not built yet) --------------------------------------
@@ -714,4 +808,5 @@ _FLOW_HANDLERS = {
     ConversationState.Flow.AI_TUTOR: _ai_tutor_flow,
     ConversationState.Flow.STUDY_PLAN: _study_plan_flow,
     ConversationState.Flow.PROGRESS: _progress_flow,
+    ConversationState.Flow.BILLING: _billing_flow,
 }

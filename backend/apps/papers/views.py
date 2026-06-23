@@ -3,6 +3,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.billing.permissions import HasFeatureAccess
+from apps.billing.services import AccessGate
 from apps.common.mixins import AuditLoggedViewSetMixin
 from apps.common.permissions import IsContentAdmin
 
@@ -22,8 +24,16 @@ class PastPaperViewSet(AuditLoggedViewSetMixin, viewsets.ModelViewSet):
     permission_classes = [IsContentAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["subject", "year", "paper_type", "session"]
+    feature_key = "paper_download"
+
+    def get_permissions(self):
+        permission_instances = super().get_permissions()
+        if self.action == "download":
+            permission_instances.append(HasFeatureAccess())
+        return permission_instances
 
     @action(detail=True, methods=["get"], url_path="download")
     def download(self, request, pk=None):
         paper = self.get_object()
+        AccessGate.record_usage(request.user, self.feature_key)
         return Response({"file_url": request.build_absolute_uri(paper.file.url)})

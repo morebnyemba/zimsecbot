@@ -3,13 +3,17 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from apps.billing.permissions import HasFeatureAccess
+from apps.billing.services import AccessGate
+
 from . import services
 from .models import AISession, Message
 from .serializers import AskResponseSerializer, AskSerializer, MessageSerializer
 
 
 class AskView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasFeatureAccess]
+    feature_key = "ai_tutor"
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "ai_tutor"
 
@@ -30,6 +34,7 @@ class AskView(APIView):
             subject_id=data.get("subject_id"),
             topic_id=data.get("topic_id"),
         )
+        AccessGate.record_usage(request.user, self.feature_key)
         response = {"session_id": session.id, **result}
         return Response(AskResponseSerializer(response).data, status=status.HTTP_200_OK)
 
