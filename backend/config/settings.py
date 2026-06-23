@@ -2,6 +2,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -168,6 +169,12 @@ CELERY_TASK_ROUTES = {
     "apps.whatsapp.*": {"queue": "whatsapp"},
     "apps.ai_tutor.*": {"queue": "ai"},
     "apps.analytics.*": {"queue": "analytics"},
+}
+CELERY_BEAT_SCHEDULE = {
+    "recompute-all-users-analytics-nightly": {
+        "task": "apps.analytics.tasks.recompute_all_users_analytics",
+        "schedule": crontab(hour=2, minute=0),
+    },
 }
 
 # --- Cache (Redis) ---

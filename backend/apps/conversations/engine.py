@@ -13,6 +13,7 @@ from django.db.models import Avg
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 
+from apps.analytics.models import Recommendation, StudyStreak
 from apps.notes.models import Note
 from apps.papers.models import PastPaper
 from apps.questions.models import Question
@@ -648,13 +649,10 @@ def _progress_flow(state, *, text, reply_id):
 
     avg_score = attempts.aggregate(avg=Avg("score"))["avg"] or 0
     recent_scores = list(attempts.order_by("-completed_at")[:5].values_list("score", flat=True))
-    weak_topics = list(
-        dict.fromkeys(
-            QuizAnswer.objects.filter(
-                attempt__user=state.user, is_correct=False, question__topic__isnull=False
-            ).values_list("question__topic__name", flat=True)
-        )
-    )[:3]
+    streak = StudyStreak.objects.filter(user=state.user).first()
+    recommendations = list(
+        Recommendation.objects.filter(user=state.user).select_related("topic")[:3]
+    )
 
     body = (
         "📊 *My Progress*\n\n"
@@ -662,16 +660,14 @@ def _progress_flow(state, *, text, reply_id):
         f"Average score: {round(avg_score, 1)}%\n"
         f"Recent scores: {', '.join(f'{s}%' for s in recent_scores)}"
     )
+    if streak and streak.current_streak > 0:
+        body += f"\n🔥 Study streak: {streak.current_streak} day(s) (best: {streak.longest_streak})"
     actions = [{"type": "text", "body": body}]
-    if weak_topics:
+    if recommendations:
         actions.append(
             {
                 "type": "text",
-                "body": (
-                    "📌 Focus on these topics: "
-                    + ", ".join(weak_topics)
-                    + "\n\nTip: try *Revision Notes* or *Practice Quiz* on these topics."
-                ),
+                "body": "📌 " + "\n".join(rec.message for rec in recommendations),
             }
         )
     actions.extend(_show_main_menu(state))
