@@ -23,6 +23,12 @@ export function Sidebar() {
 
   const items = [
     ...NAV_ITEMS,
+    ...(user?.role === "school_admin" || user?.role === "superadmin"
+      ? [
+          { href: "/schools", label: "Schools" },
+          { href: "/billing", label: "Billing" },
+        ]
+      : []),
     ...(user?.role === "superadmin"
       ? [{ href: "/audit-logs", label: "Audit Log" }]
       : []),

@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/papers", label: "Past Papers" },
   { href: "/notes", label: "Notes" },
   { href: "/quiz", label: "Quizzes" },
+  { href: "/ask", label: "AI Tutor" },
   { href: "/progress", label: "Progress" },
   { href: "/profile", label: "Profile" },
 ];
