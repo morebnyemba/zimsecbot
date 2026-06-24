@@ -54,6 +54,12 @@ jobs:
         working-directory: backend
         run: ruff check .
 
+      - name: Dependency vulnerability scan
+        working-directory: backend
+        run: |
+          pip install -q pip-audit
+          pip-audit -r requirements.txt
+
       - name: Run tests
         working-directory: backend
-        run: pytest --cov=apps
+        run: pytest --cov=apps --cov-fail-under=80

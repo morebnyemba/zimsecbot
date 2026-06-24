@@ -1,11 +1,15 @@
 from django.db import models
 
 from apps.common.models import BaseModel
+from apps.common.validators import validate_pdf_extension, validate_upload_size
 from apps.subjects.models import Subject
 
 
 class MarkingScheme(BaseModel):
-    file = models.FileField(upload_to="marking_schemes/")
+    file = models.FileField(
+        upload_to="marking_schemes/",
+        validators=[validate_pdf_extension, validate_upload_size],
+    )
 
     def __str__(self):
         return f"MarkingScheme<{self.id}>"
@@ -26,7 +30,10 @@ class PastPaper(BaseModel):
     session = models.CharField(max_length=20, choices=Session.choices)
     paper_number = models.PositiveSmallIntegerField()
     paper_type = models.CharField(max_length=30, choices=PaperType.choices)
-    file = models.FileField(upload_to="past_papers/")
+    file = models.FileField(
+        upload_to="past_papers/",
+        validators=[validate_pdf_extension, validate_upload_size],
+    )
     marking_scheme = models.ForeignKey(
         MarkingScheme, on_delete=models.SET_NULL, null=True, blank=True, related_name="papers"
     )

@@ -3,8 +3,12 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from apps.common.views import HealthCheckView
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("health/", HealthCheckView.as_view(), name="health-check"),
+    path("", include("django_prometheus.urls")),
     path("api/v1/auth/login/", TokenObtainPairView.as_view(), name="token-obtain-pair"),
     path("api/v1/auth/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("api/v1/", include("apps.accounts.urls")),

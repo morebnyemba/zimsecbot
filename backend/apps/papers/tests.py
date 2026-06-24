@@ -72,3 +72,30 @@ def test_paper_download_allowed_on_plus_plan(client, student, tmp_path, settings
     response = client.get(f"/api/v1/papers/{paper.id}/download/")
     assert response.status_code == 200
     assert "file_url" in response.data
+
+
+@pytest.mark.django_db
+def test_paper_upload_rejects_non_pdf(tmp_path, settings):
+    settings.MEDIA_ROOT = tmp_path
+    admin = User.objects.create_user(
+        email="admin@example.com", password="testpass123", role=User.Role.CONTENT_ADMIN
+    )
+    api = APIClient()
+    api.force_authenticate(user=admin)
+    subject = Subject.objects.create(name="Physics", code="PHY", level=Subject.Level.O_LEVEL)
+
+    response = api.post(
+        "/api/v1/papers/",
+        {
+            "subject": str(subject.id),
+            "year": 2023,
+            "session": PastPaper.Session.JUNE,
+            "paper_number": 1,
+            "paper_type": PastPaper.PaperType.MULTIPLE_CHOICE,
+            "file": SimpleUploadedFile("paper.exe", b"content"),
+        },
+        format="multipart",
+    )
+
+    assert response.status_code == 400
+    assert "file" in response.data
