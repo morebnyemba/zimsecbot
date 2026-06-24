@@ -169,6 +169,7 @@ CELERY_TASK_ROUTES = {
     "apps.whatsapp.*": {"queue": "whatsapp"},
     "apps.ai_tutor.*": {"queue": "ai"},
     "apps.analytics.*": {"queue": "analytics"},
+    "apps.billing.*": {"queue": "billing"},
 }
 CELERY_BEAT_SCHEDULE = {
     "recompute-all-users-analytics-nightly": {

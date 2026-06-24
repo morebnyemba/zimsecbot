@@ -17,3 +17,4 @@ google-genai==0.3.0
 requests==2.32.3
 gunicorn==23.0.0
 whitenoise==6.7.0
+paynow==1.0.8

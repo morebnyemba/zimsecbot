@@ -190,3 +190,52 @@ def test_ai_tutor_question_enqueues_action(state):
             "question": "What is photosynthesis?",
         }
     ]
+
+
+@pytest.mark.django_db
+def test_ai_tutor_over_quota_starts_billing_flow(state):
+    from apps.billing.models import UsageRecord
+
+    UsageRecord.objects.create(
+        user=state.user, feature_key="ai_tutor", count=5, period_date=timezone.localdate()
+    )
+    state.current_flow = ConversationState.Flow.AI_TUTOR
+    state.current_step = "ask"
+    state.save()
+
+    actions = handle_inbound_message(state, text="What is photosynthesis?", reply_id=None)
+    state.save()
+
+    assert any(a["type"] == "list" for a in actions)
+    state.refresh_from_db()
+    assert state.current_flow == ConversationState.Flow.BILLING
+    assert state.current_step == "choose_plan"
+
+
+@pytest.mark.django_db
+def test_billing_flow_collects_plan_method_and_phone(state):
+    state.current_flow = ConversationState.Flow.BILLING
+    state.current_step = "choose_plan"
+    state.save()
+
+    actions = handle_inbound_message(state, text="", reply_id="plan_plus")
+    state.save()
+    state.refresh_from_db()
+    assert state.current_step == "choose_method"
+    assert any(a["type"] == "buttons" for a in actions)
+
+    handle_inbound_message(state, text="", reply_id="method_ecocash")
+    state.save()
+    state.refresh_from_db()
+    assert state.current_step == "enter_phone"
+
+    actions = handle_inbound_message(state, text="0771234567", reply_id=None)
+    state.save()
+    state.refresh_from_db()
+
+    assert state.current_flow == ConversationState.Flow.MAIN_MENU
+    enqueue_actions = [a for a in actions if a["type"] == "enqueue_subscribe"]
+    assert len(enqueue_actions) == 1
+    assert enqueue_actions[0]["plan_code"] == "plus"
+    assert enqueue_actions[0]["method"] == "ecocash"
+    assert enqueue_actions[0]["pay_phone"] == "0771234567"
