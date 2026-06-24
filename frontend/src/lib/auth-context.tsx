@@ -18,7 +18,7 @@ type AuthContextValue = {
   user: CurrentUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -56,8 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [loadUser],
   );
 
-  const logout = useCallback(() => {
-    apiLogout();
+  const logout = useCallback(async () => {
+    await apiLogout();
     setUser(null);
   }, []);
 
