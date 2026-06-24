@@ -113,8 +113,37 @@ export async function register(input: {
   return res.json();
 }
 
-export function logout() {
+export async function logout() {
+  const tokens = getTokens();
   setTokens(null);
+  if (!tokens?.refresh) return;
+  try {
+    await fetch(`${API_BASE}/api/v1/auth/logout/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokens.access}` },
+      body: JSON.stringify({ refresh: tokens.refresh }),
+    });
+  } catch {
+    // Best-effort: token is already cleared client-side even if the blacklist call fails.
+  }
+}
+
+export type FeatureLockedError = {
+  code: "feature_locked";
+  message: string;
+  upgrade_url: string;
+};
+
+export function isFeatureLockedError(error: unknown): error is ApiError & {
+  body: { error: FeatureLockedError };
+} {
+  return (
+    error instanceof ApiError &&
+    error.status === 403 &&
+    typeof error.body === "object" &&
+    error.body !== null &&
+    (error.body as { error?: { code?: string } }).error?.code === "feature_locked"
+  );
 }
 
 export function isAuthenticated() {
