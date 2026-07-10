@@ -50,7 +50,7 @@ export default function RegisterPage() {
       >
         <div>
           <h1 className="text-xl font-semibold">Create your account</h1>
-          <p className="text-sm text-gray-500">Start revising for ZIMSEC today.</p>
+          <p className="text-sm text-gray-500">Start revising with Zimfundi today.</p>
         </div>
 
         {error && (

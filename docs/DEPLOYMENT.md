@@ -15,7 +15,7 @@ values for at least:
 | `DEBUG` | Must be `False` in production — enables HSTS/secure-cookie settings in `config/settings.py` |
 | `ALLOWED_HOSTS` | Comma-separated production hostnames |
 | `CORS_ALLOWED_ORIGINS` | Production frontend origins |
-| `DATABASE_URL` | `postgres://zimsec:<password>@postgres:5432/zimsec` |
+| `DATABASE_URL` | `postgres://zimfundi:<password>@postgres:5432/zimfundi` |
 | `REDIS_URL`, `CELERY_BROKER_URL` | Point at the `redis` service |
 | `GEMINI_API_KEY`, `WHATSAPP_*`, `PAYNOW_*` | Third-party credentials |
 | `SENTRY_DSN` | Optional — leave blank to disable error tracking |

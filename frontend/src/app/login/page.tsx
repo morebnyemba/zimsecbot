@@ -43,7 +43,7 @@ export default function LoginPage() {
         className="w-full max-w-sm space-y-4 rounded-lg border border-gray-200 bg-white p-8 shadow-sm"
       >
         <div>
-          <h1 className="text-xl font-semibold">ZIMSEC Admin Portal</h1>
+          <h1 className="text-xl font-semibold">Zimfundi Admin Portal</h1>
           <p className="text-sm text-gray-500">Sign in with your admin account.</p>
         </div>
 

@@ -21,7 +21,7 @@ export function Sidebar() {
   return (
     <nav className="flex w-56 flex-col gap-1 border-r border-gray-200 bg-white p-4">
       <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-        ZIMSEC Revision
+        Zimfundi Revision
       </p>
       {NAV_ITEMS.map((item) => (
         <Link

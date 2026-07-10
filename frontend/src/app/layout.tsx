@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZIMSEC Admin Portal",
-  description: "Admin portal for the ZIMSEC STEM Revision Platform",
+  title: "Zimfundi Admin Portal",
+  description: "Admin portal for the Zimfundi STEM Revision Platform",
 };
 
 export default function RootLayout({

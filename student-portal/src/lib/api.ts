@@ -9,7 +9,7 @@ export type Paginated<T> = {
 
 type Tokens = { access: string; refresh: string };
 
-const TOKEN_KEY = "zimsec_student_tokens";
+const TOKEN_KEY = "zimfundi_student_tokens";
 
 function getTokens(): Tokens | null {
   if (typeof window === "undefined") return null;

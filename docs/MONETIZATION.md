@@ -1,4 +1,4 @@
-# Monetization & Access Gating — ZIMSEC STEM Revision Platform
+# Monetization & Access Gating — Zimfundi STEM Revision Platform
 
 ## 1. Business Model Overview
 

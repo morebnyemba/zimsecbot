@@ -12,9 +12,9 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_DB: zimsec_test
-          POSTGRES_USER: zimsec
-          POSTGRES_PASSWORD: zimsec
+          POSTGRES_DB: zimfundi_test
+          POSTGRES_USER: zimfundi
+          POSTGRES_PASSWORD: zimfundi
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready
@@ -33,7 +33,7 @@ jobs:
     env:
       DJANGO_SECRET_KEY: ci-test-key
       DEBUG: "True"
-      DATABASE_URL: postgres://zimsec:zimsec@localhost:5432/zimsec_test
+      DATABASE_URL: postgres://zimfundi:zimfundi@localhost:5432/zimfundi_test
       REDIS_URL: redis://localhost:6379/1
       CELERY_BROKER_URL: redis://localhost:6379/0
 

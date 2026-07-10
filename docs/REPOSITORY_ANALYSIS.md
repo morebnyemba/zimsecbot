@@ -1,6 +1,6 @@
 # Repository Analysis
 
-Analysis of sibling repositories under `morebnyemba` to identify reusable code, patterns, and architecture for the ZIMSEC STEM Revision Platform.
+Analysis of sibling repositories under `morebnyemba` to identify reusable code, patterns, and architecture for the Zimfundi STEM Revision Platform.
 
 > **Note on access**: `hanna`, `Kali-Safaris`, and `sungrip-chatbot` are public and were analyzed via their GitHub web interface (file browsing + raw file fetch) since this session's GitHub API scope is restricted to `morebnyemba/zimsecbot`. `bubi-rural` is **private** and could not be analyzed — direct repo access (cloning or adding it to this session's GitHub scope) is required to review it.
 
@@ -71,7 +71,7 @@ Analysis of sibling repositories under `morebnyemba` to identify reusable code, 
 4. `AIProvider` model with rate-limit tracking fields — useful for managing Gemini quota.
 5. `notifications` app (`NotificationTemplate`, `queue_notifications_to_users()`) — reusable for revision reminders.
 6. JWT auth + Jazzmin admin setup.
-7. Celery queue topology (`flow`, `message_sending`, `cpu_heavy`) — maps directly to ZIMSEC needs (tutoring flow state, Gemini calls, WhatsApp delivery).
+7. Celery queue topology (`flow`, `message_sending`, `cpu_heavy`) — maps directly to Zimfundi needs (tutoring flow state, Gemini calls, WhatsApp delivery).
 
 **Recommended Integrations**:
 - Port `meta_integration/utils.py` and `MetaAppConfig` wholesale as the WhatsApp layer.
@@ -127,9 +127,9 @@ Analysis of sibling repositories under `morebnyemba` to identify reusable code, 
 
 ## Cross-Repository Synthesis
 
-All three analyzed repos converge on a near-identical **WhatsApp Cloud API + Django + Celery + Flow-engine** architecture, independently re-implemented three times with diminishing AI maturity (hanna has the best Gemini patterns but single-shot only; Kali-Safaris has the best flow engine and queue topology; sungrip has the cleanest webhook security but no working AI). This convergence is strong evidence that a **shared, dedicated module** (not a fourth reimplementation) is the right call for ZIMSEC.
+All three analyzed repos converge on a near-identical **WhatsApp Cloud API + Django + Celery + Flow-engine** architecture, independently re-implemented three times with diminishing AI maturity (hanna has the best Gemini patterns but single-shot only; Kali-Safaris has the best flow engine and queue topology; sungrip has the cleanest webhook security but no working AI). This convergence is strong evidence that a **shared, dedicated module** (not a fourth reimplementation) is the right call for Zimfundi.
 
-**Concrete reuse plan for the ZIMSEC platform**:
+**Concrete reuse plan for the Zimfundi platform**:
 
 | Capability | Best source | Notes |
 |---|---|---|

@@ -31,7 +31,7 @@ GLOBAL_RESET_COMMANDS = {"menu", "0"}
 QUIZ_QUESTION_COUNT = 5
 
 HELP_TEXT = (
-    "🤖 *ZIMSEC STEM Assistant*\n\n"
+    "🤖 *Zimfundi STEM Assistant*\n\n"
     "Reply with the option shown, or use:\n"
     "• *menu* / *0* — return to the main menu\n"
     "• *help* — show this message"
@@ -72,7 +72,7 @@ def handle_inbound_message(state, *, text, reply_id):
         return [
             {
                 "type": "text",
-                "body": "👋 Welcome to the ZIMSEC STEM Assistant! What's your full name?",
+                "body": "👋 Welcome to the Zimfundi STEM Assistant! What's your full name?",
             }
         ]
 
