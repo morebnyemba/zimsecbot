@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { Logo } from "@/components/Logo";
 import { ApiError, register } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -48,9 +49,12 @@ export default function RegisterPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm space-y-4 rounded-lg border border-gray-200 bg-white p-8 shadow-sm"
       >
-        <div>
-          <h1 className="text-xl font-semibold">Create your account</h1>
-          <p className="text-sm text-gray-500">Start revising with Zimfundi today.</p>
+        <div className="space-y-4">
+          <Logo />
+          <div>
+            <h1 className="text-xl font-semibold">Create your account</h1>
+            <p className="text-sm text-gray-500">Start revising with Zimfundi today.</p>
+          </div>
         </div>
 
         {error && (
