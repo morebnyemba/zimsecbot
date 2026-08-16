@@ -63,3 +63,39 @@ jobs:
       - name: Run tests
         working-directory: backend
         run: pytest --cov=apps --cov-fail-under=80
+
+  web:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [frontend, student-portal]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.app }}
+        run: npm ci
+
+      - name: Lint
+        working-directory: ${{ matrix.app }}
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: ${{ matrix.app }}
+        run: npm run typecheck
+
+      - name: Run tests
+        working-directory: ${{ matrix.app }}
+        run: npm run test
+
+      - name: Build
+        working-directory: ${{ matrix.app }}
+        run: npm run build
