@@ -2,14 +2,14 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-zimsec}
-      POSTGRES_USER: ${POSTGRES_USER:-zimsec}
+      POSTGRES_DB: ${POSTGRES_DB:-zimfundi}
+      POSTGRES_USER: ${POSTGRES_USER:-zimfundi}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-zimsec}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-zimfundi}"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { Logo } from "@/components/Logo";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -43,9 +44,12 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm space-y-4 rounded-lg border border-gray-200 bg-white p-8 shadow-sm"
       >
-        <div>
-          <h1 className="text-xl font-semibold">ZIMSEC Revision</h1>
-          <p className="text-sm text-gray-500">Sign in to continue revising.</p>
+        <div className="space-y-4">
+          <Logo />
+          <div>
+            <h1 className="text-xl font-semibold">Welcome back</h1>
+            <p className="text-sm text-gray-500">Sign in to continue revising.</p>
+          </div>
         </div>
 
         {error && (

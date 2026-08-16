@@ -2,7 +2,7 @@
 
 ## 1. Goals & Constraints
 
-The AI Tutor must act as a trustworthy ZIMSEC STEM tutor: explain concepts, show full workings for Mathematics, connect Science explanations to syllabus topics, generate quizzes/exercises/study plans, and **never invent facts** — every substantive answer must be grounded in retrieved curriculum material where possible, with explicit uncertainty when it isn't.
+The AI Tutor must act as a trustworthy Zimfundi STEM tutor: explain concepts, show full workings for Mathematics, connect Science explanations to syllabus topics, generate quizzes/exercises/study plans, and **never invent facts** — every substantive answer must be grounded in retrieved curriculum material where possible, with explicit uncertainty when it isn't.
 
 None of the three analyzed sibling repos (`hanna`, `Kali-Safaris`, `sungrip-chatbot`) have a working RAG/multi-turn-memory system — this is the one component built genuinely new for this platform, though the Gemini *call pattern* (strict JSON output + defensive parsing) is reused from `hanna/email_integration/tasks.py`.
 
@@ -49,7 +49,7 @@ flowchart TD
 
 ## 6. Prompt Strategy
 
-- **System prompt** establishes persona ("ZIMSEC STEM tutor"), syllabus scope, and hard rules: show full workings for Math, cite sources when available, say "I'm not certain" rather than guess, never answer outside STEM/ZIMSEC scope.
+- **System prompt** establishes persona ("Zimfundi STEM tutor"), syllabus scope, and hard rules: show full workings for Math, cite sources when available, say "I'm not certain" rather than guess, never answer outside STEM/ZIMSEC scope.
 - **Task-specific prompt templates** (Jinja2, matching the templating approach already used in the flow engines of `Kali-Safaris`/`sungrip-chatbot`) for: concept explanation, step-by-step problem solving, mistake identification ("here's where this went wrong"), quiz generation, study plan generation.
 - **Tool-calling / agent pattern**: the tutor is modeled as an agent that first classifies intent (explain / solve / generate-quiz / build-plan / general-chat) then invokes the matching tool:
   - `search_knowledge_base(query, subject, topic)` — RAG retrieval

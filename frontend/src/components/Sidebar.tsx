@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
+import { Logo } from "@/components/Logo";
 import { useAuth } from "@/lib/auth-context";
 
 const NAV_ITEMS = [
@@ -23,6 +24,12 @@ export function Sidebar() {
 
   const items = [
     ...NAV_ITEMS,
+    ...(user?.role === "school_admin" || user?.role === "superadmin"
+      ? [
+          { href: "/schools", label: "Schools" },
+          { href: "/billing", label: "Billing" },
+        ]
+      : []),
     ...(user?.role === "superadmin"
       ? [{ href: "/audit-logs", label: "Audit Log" }]
       : []),
@@ -30,9 +37,12 @@ export function Sidebar() {
 
   return (
     <nav className="flex w-56 flex-col gap-1 border-r border-gray-200 bg-white p-4">
-      <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-        Admin Portal
-      </p>
+      <div className="mb-4 px-2">
+        <Logo />
+        <p className="mt-1.5 text-[11px] font-medium uppercase tracking-wide text-gray-400">
+          Admin Portal
+        </p>
+      </div>
       {items.map((item) => (
         <Link
           key={item.href}

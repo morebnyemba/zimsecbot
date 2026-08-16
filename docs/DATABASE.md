@@ -1,4 +1,4 @@
-# Database Design — ZIMSEC STEM Revision Platform
+# Database Design — Zimfundi STEM Revision Platform
 
 PostgreSQL is the system of record. `pgvector` extension is used for embeddings (no separate vector DB needed at launch scale).
 

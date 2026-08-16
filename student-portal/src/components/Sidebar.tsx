@@ -4,12 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
+import { Logo } from "@/components/Logo";
+
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/subjects", label: "Subjects" },
   { href: "/papers", label: "Past Papers" },
   { href: "/notes", label: "Notes" },
   { href: "/quiz", label: "Quizzes" },
+  { href: "/ask", label: "AI Tutor" },
   { href: "/progress", label: "Progress" },
   { href: "/profile", label: "Profile" },
 ];
@@ -19,9 +22,9 @@ export function Sidebar() {
 
   return (
     <nav className="flex w-56 flex-col gap-1 border-r border-gray-200 bg-white p-4">
-      <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-        ZIMSEC Revision
-      </p>
+      <div className="mb-4 px-2">
+        <Logo />
+      </div>
       {NAV_ITEMS.map((item) => (
         <Link
           key={item.href}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { apiFetch, type Paginated } from "@/lib/api";
+import { apiFetch, isFeatureLockedError, type Paginated } from "@/lib/api";
 import type { PastPaper, Subject } from "@/lib/types";
 
 export default function PapersPage() {
@@ -10,6 +10,9 @@ export default function PapersPage() {
   const [papers, setPapers] = useState<PastPaper[]>([]);
   const [subjectFilter, setSubjectFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [upgradePrompt, setUpgradePrompt] = useState<{ message: string; upgradeUrl: string } | null>(
+    null,
+  );
 
   const loadPapers = useCallback(async (subjectId: string) => {
     setLoading(true);
@@ -31,12 +34,34 @@ export default function PapersPage() {
   }, [loadPapers]);
 
   async function handleDownload(paper: PastPaper) {
-    const data = await apiFetch<{ file_url: string }>(`/api/v1/papers/${paper.id}/download/`);
-    window.open(data.file_url, "_blank");
+    try {
+      const data = await apiFetch<{ file_url: string }>(`/api/v1/papers/${paper.id}/download/`);
+      window.open(data.file_url, "_blank");
+    } catch (err) {
+      if (isFeatureLockedError(err)) {
+        setUpgradePrompt({
+          message: err.body.error.message,
+          upgradeUrl: err.body.error.upgrade_url,
+        });
+        return;
+      }
+      throw err;
+    }
   }
 
   return (
     <div className="space-y-6">
+      {upgradePrompt && (
+        <div className="flex items-center justify-between rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span>{upgradePrompt.message}</span>
+          <a
+            href={upgradePrompt.upgradeUrl}
+            className="ml-4 shrink-0 rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700"
+          >
+            Upgrade plan
+          </a>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Past Papers</h1>
         <select

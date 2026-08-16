@@ -79,3 +79,48 @@ export type StudentProfile = {
   school_name: string;
   preferences: Record<string, unknown>;
 };
+
+export type AIMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  sources: unknown[];
+  created_at: string;
+};
+
+export type AskResponse = {
+  session_id: string;
+  answer: string;
+  sources: unknown[];
+};
+
+export type TopicPerformance = {
+  id: string;
+  subject_name: string;
+  topic_name: string;
+  attempts_count: number;
+  correct_count: number;
+  accuracy: number;
+};
+
+export type StudyStreak = {
+  current_streak: number;
+  longest_streak: number;
+  last_activity_date: string | null;
+};
+
+export type Recommendation = {
+  id: string;
+  subject_name: string;
+  topic_name: string;
+  reason: string;
+  message: string;
+  created_at: string;
+};
+
+export type StudentAnalytics = {
+  topic_performance: TopicPerformance[];
+  recommendations: Recommendation[];
+  streak: StudyStreak | null;
+  recent_scores: (number | null)[];
+};

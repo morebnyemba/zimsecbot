@@ -1,4 +1,4 @@
-# ZIMSEC STEM Revision Platform — Backend
+# Zimfundi STEM Revision Platform — Backend
 
 Django + DRF backend. See `../docs/` for architecture, database, API, WhatsApp flow, AI, and monetization design docs.
 

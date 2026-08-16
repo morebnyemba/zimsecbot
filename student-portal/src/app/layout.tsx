@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZIMSEC Revision",
-  description: "Student portal for the ZIMSEC STEM Revision Platform",
+  title: "Zimfundi Revision",
+  description: "Student portal for the Zimfundi STEM Revision Platform",
 };
 
 export default function RootLayout({

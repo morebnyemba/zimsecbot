@@ -1,4 +1,4 @@
-# Architecture — ZIMSEC STEM Revision Platform
+# Architecture — Zimfundi STEM Revision Platform
 
 ## 1. Overview
 

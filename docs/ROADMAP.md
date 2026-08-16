@@ -1,4 +1,4 @@
-# Roadmap — ZIMSEC STEM Revision Platform
+# Roadmap — Zimfundi STEM Revision Platform
 
 ## Phase 1 — Foundation
 

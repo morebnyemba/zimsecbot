@@ -90,7 +90,7 @@ ASGI_APPLICATION = "config.asgi.application"
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
-        default="postgres://zimsec:zimsec@localhost:5432/zimsec",
+        default="postgres://zimfundi:zimfundi@localhost:5432/zimfundi",
     )
 }
 
@@ -151,7 +151,7 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "ZIMSEC STEM Revision Platform API",
+    "TITLE": "Zimfundi STEM Revision Platform API",
     "DESCRIPTION": (
         "API for past papers, notes, quizzes, study plans, AI tutor, and "
         "WhatsApp integration."
@@ -160,7 +160,9 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:3000"])
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS", default=["http://localhost:3000", "http://localhost:3001"]
+)
 
 # --- Production security hardening (no-ops in local/DEBUG dev) ---
 if not DEBUG:

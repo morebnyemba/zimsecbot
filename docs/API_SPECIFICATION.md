@@ -1,4 +1,4 @@
-# API Specification — ZIMSEC STEM Revision Platform
+# API Specification — Zimfundi STEM Revision Platform
 
 Base URL: `/api/v1/`. All endpoints return JSON. Auth via JWT bearer tokens unless noted public.
 

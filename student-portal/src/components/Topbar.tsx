@@ -8,8 +8,8 @@ export function Topbar() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     router.replace("/login");
   }
 
