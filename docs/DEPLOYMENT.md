@@ -28,18 +28,42 @@ by `config/settings.py`; everything else flows through `backend/.env`.
 
 ```bash
 cp backend/.env.example backend/.env   # then edit with production values
+docker network create edge             # once per host — see "Sharing a host" below
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 This brings up `postgres`, `redis`, `backend` (gunicorn, runs `migrate`
-on boot), `celery_worker`, `celery_beat`, and an `nginx` reverse proxy on
-port 80 serving `/static/` and `/media/` directly and proxying everything
-else to gunicorn.
+on boot), `celery_worker`, `celery_beat`, and an `nginx` reverse proxy
+(container name `zimfundi_nginx`) serving `/static/` and `/media/` directly
+and proxying everything else to gunicorn. `nginx` does **not** publish a
+host port itself — it only joins the `edge` Docker network, so an external
+reverse proxy on that network (see below) is what actually terminates
+inbound traffic and forwards it to `zimfundi_nginx:80`.
 
 TLS termination is expected to happen upstream of `nginx` (Coolify's built-in
-Traefik, or another load balancer) forwarding `X-Forwarded-Proto: https` —
-`SECURE_PROXY_SSL_HEADER` in `config/settings.py` relies on that header to
-know a request arrived over HTTPS.
+Traefik, another load balancer, or a shared nginx front — see below)
+forwarding `X-Forwarded-Proto: https` — `SECURE_PROXY_SSL_HEADER` in
+`config/settings.py` relies on that header to know a request arrived over
+HTTPS.
+
+### Sharing a host with another app
+
+If this backend runs on a host that already has another app claiming ports
+80/443 (e.g. via its own nginx container), don't also try to publish those
+ports here — put both apps on a shared external Docker network instead and
+let the existing front proxy route to `zimfundi_nginx:80` by domain:
+
+1. `docker network create edge` once on the host, if it doesn't already exist.
+2. Attach the other app's front-facing nginx/proxy service to `edge` too
+   (add `edge` to its `networks:` list, declaring it `external: true` at the
+   top level of its compose file — same pattern used here).
+3. Add a server block to that other proxy for this backend's domain,
+   proxying to `http://zimfundi_nginx:80` (which internally still serves
+   `/static/`, `/media/`, `/health/`, and proxies everything else to
+   gunicorn) — no changes needed on this side beyond what's already in
+   `docker-compose.prod.yml`.
+4. Point that domain's TLS cert issuance (certbot or otherwise) at the
+   shared proxy, not at this compose file — `zimfundi_nginx` never sees TLS.
 
 ### Coolify
 
