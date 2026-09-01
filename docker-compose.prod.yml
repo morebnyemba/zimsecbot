@@ -38,6 +38,17 @@ services:
     command: >
       sh -c "python manage.py migrate --noinput &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --access-logfile - --error-logfile -"
+    healthcheck:
+      # Without this, `docker compose up --wait` (and celery/nginx's
+      # depends_on below) has nothing to gate on — a backend that's up but
+      # can't reach postgres (e.g. a DB-password mismatch, as happened on
+      # 2026-09-01) looked identical to a healthy one to `docker compose ps`
+      # until someone read the logs by hand.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/', timeout=10).read()"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
   celery_worker:
     build: ./backend
@@ -46,7 +57,8 @@ services:
       - media_data:/app/media
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     command: celery -A config worker -l info
 
   celery_beat:
@@ -54,7 +66,8 @@ services:
     env_file: ./backend/.env
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     command: celery -A config beat -l info
 
   nginx:
@@ -66,10 +79,17 @@ services:
       - media_data:/app/media:ro
       - static_data:/app/staticfiles:ro
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - default
       - edge
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "-T", "3", "http://127.0.0.1/health/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:
