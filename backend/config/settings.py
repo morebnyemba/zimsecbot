@@ -168,6 +168,15 @@ CORS_ALLOWED_ORIGINS = env.list(
 if not DEBUG:
     SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    # /health/ is deliberately reachable over plain HTTP: the Docker
+    # HEALTHCHECK and docker-compose's healthcheck both hit gunicorn
+    # directly on 127.0.0.1:8000, bypassing nginx entirely, so there's no
+    # X-Forwarded-Proto header for SECURE_PROXY_SSL_HEADER to see -- without
+    # this exemption SECURE_SSL_REDIRECT 301s the health check to itself
+    # forever and the container never reports healthy. This was masked by
+    # DEBUG=True (a no-op path) until production was first run with
+    # DEBUG=False.
+    SECURE_REDIRECT_EXEMPT = [r"^health/$"]
     SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
