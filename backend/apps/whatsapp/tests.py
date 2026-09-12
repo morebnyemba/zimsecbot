@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import threading
 from unittest.mock import patch
 
 import pytest
@@ -97,4 +98,38 @@ def test_duplicate_message_id_processed_once(mock_client_cls):
     process_inbound_event(payload)
 
     assert WebhookEventLog.objects.filter(message_id="wamid.123").count() == 1
+    assert mock_client_cls.return_value.mark_as_read.call_count == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("apps.whatsapp.tasks.WhatsAppClient")
+def test_concurrent_duplicate_deliveries_processed_once(mock_client_cls):
+    # WhatsApp Cloud API is known to redeliver the same webhook concurrently
+    # on retry, not just sequentially — that's the race the plain
+    # get_or_create() + later save() in _process_message() didn't close.
+    # transaction=True (a real TransactionTestCase, not the default rolled-
+    # back TestCase) is required so the two threads below see each other's
+    # committed rows instead of each running inside its own isolated,
+    # never-visible-to-the-other test transaction.
+    message = {
+        "id": "wamid.concurrent",
+        "from": "263771234568",
+        "type": "text",
+        "text": {"body": "menu"},
+    }
+    payload = {"entry": [{"changes": [{"value": {"messages": [message]}}]}]}
+
+    barrier = threading.Barrier(2)
+
+    def run():
+        barrier.wait()
+        process_inbound_event(payload)
+
+    threads = [threading.Thread(target=run) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert WebhookEventLog.objects.filter(message_id="wamid.concurrent").count() == 1
     assert mock_client_cls.return_value.mark_as_read.call_count == 1

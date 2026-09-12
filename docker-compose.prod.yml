@@ -70,6 +70,53 @@ services:
         condition: service_healthy
     command: celery -A config beat -l info
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Inlined into the client JS bundle at build time (Next.js
+        # convention for NEXT_PUBLIC_* vars) — must be a build arg, not a
+        # runtime `environment:` entry, or the browser bundle keeps whatever
+        # value was baked in at image build time regardless of this file.
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.zimfundi.co.zw}
+    container_name: zimfundi_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - default
+      - edge
+    healthcheck:
+      # /login is a static prerendered route that renders with no backend
+      # call, so this proves the Next.js server itself is up without also
+      # depending on `backend` already answering.
+      test: ["CMD", "wget", "-qO-", "-T", "3", "http://127.0.0.1:3000/login"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  student_portal:
+    build:
+      context: ./student-portal
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.zimfundi.co.zw}
+    container_name: zimfundi_student_portal
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - default
+      - edge
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "-T", "3", "http://127.0.0.1:3000/login"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
   nginx:
     image: nginx:1.27-alpine
     container_name: zimfundi_nginx
