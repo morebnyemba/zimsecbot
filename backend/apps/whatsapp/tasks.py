@@ -1,6 +1,7 @@
 import logging
 
 from celery import shared_task
+from django.db import transaction
 from django.utils import timezone
 
 from apps.conversations.engine import handle_inbound_message
@@ -27,32 +28,56 @@ def _process_message(message):
     if not message_id or not phone_number:
         return
 
-    log, created = WebhookEventLog.objects.get_or_create(
-        message_id=message_id,
-        defaults={"phone_number": phone_number, "payload": message},
-    )
-    if not created and log.processed_at:
-        return  # duplicate delivery, already handled
+    # Both get_or_create calls below use select_for_update() inside one
+    # transaction, closing two race windows the previous plain get_or_create
+    # + later save() left open:
+    #
+    # 1. Meta redelivers the same message_id concurrently (a documented
+    #    WhatsApp Cloud API retry behaviour). The old code read
+    #    `log.processed_at` *outside* any lock, so a second delivery could
+    #    see `created=False, processed_at=None` (the first delivery hadn't
+    #    finished yet) and process the same message a second time —
+    #    duplicate outbound replies, and for the billing flow, a duplicate
+    #    payment-prompt dispatch.
+    # 2. The same user sends two messages in quick succession (e.g. a
+    #    double-tap on a button). Both tasks read the same ConversationState
+    #    row, advance it independently in memory from the same starting
+    #    point, and `state.save()` — the second save silently overwrote the
+    #    first transition (a lost update), desyncing what the user sees from
+    #    `current_step`/`context`.
+    #
+    # select_for_update() on message_id/phone_number serializes exactly the
+    # two cases that must never run concurrently, without holding a lock
+    # across unrelated phone numbers or unrelated messages.
+    with transaction.atomic():
+        log, created = WebhookEventLog.objects.select_for_update().get_or_create(
+            message_id=message_id,
+            defaults={"phone_number": phone_number, "payload": message},
+        )
+        if not created and log.processed_at:
+            return  # duplicate delivery, already handled
 
-    text, reply_id = _extract_input(message)
+        text, reply_id = _extract_input(message)
 
-    try:
-        state, _ = ConversationState.objects.get_or_create(phone_number=phone_number)
-        actions = handle_inbound_message(state, text=text, reply_id=reply_id)
-        state.save()
+        try:
+            state, _ = ConversationState.objects.select_for_update().get_or_create(
+                phone_number=phone_number
+            )
+            actions = handle_inbound_message(state, text=text, reply_id=reply_id)
+            state.save()
 
-        client = WhatsAppClient()
-        client.mark_as_read(message_id)
-        for action in actions:
-            _dispatch_action(client, phone_number, action)
-    except Exception:
-        logger.exception("Failed to process inbound WhatsApp message %s", message_id)
-        log.error = "failed to process"
-        log.save(update_fields=["error"])
-        return
+            client = WhatsAppClient()
+            client.mark_as_read(message_id)
+            for action in actions:
+                _dispatch_action(client, phone_number, action)
+        except Exception:
+            logger.exception("Failed to process inbound WhatsApp message %s", message_id)
+            log.error = "failed to process"
+            log.save(update_fields=["error"])
+            return
 
-    log.processed_at = timezone.now()
-    log.save(update_fields=["processed_at"])
+        log.processed_at = timezone.now()
+        log.save(update_fields=["processed_at"])
 
 
 def _extract_input(message):
