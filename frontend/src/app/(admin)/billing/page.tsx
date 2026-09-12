@@ -50,7 +50,7 @@ export default function BillingPage() {
       apiFetch<UsageRecord[]>("/api/v1/billing/usage/"),
     ]);
     setPlans(plansRes.results);
-    setSubscription(subscriptionRes);
+    setSubscription(subscriptionRes ?? null);
     setUsage(usageRes);
     setLoading(false);
   }
