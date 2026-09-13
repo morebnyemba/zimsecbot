@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Sidebar } from "@/components/Sidebar";
@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth-context";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
@@ -21,10 +22,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen flex-1">
-      <Sidebar />
+      <Sidebar mobileOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
       <div className="flex flex-1 flex-col">
-        <Topbar />
-        <main className="flex-1 p-6">{children}</main>
+        <Topbar onMenuClick={() => setMobileNavOpen(true)} />
+        <main className="flex-1 p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );

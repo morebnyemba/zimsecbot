@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 
 import { NAV_ITEMS } from "@/components/Sidebar";
 import { useAuth } from "@/lib/auth-context";
@@ -13,7 +13,7 @@ function initials(email: string) {
   return chars.join("").toUpperCase();
 }
 
-export function Topbar() {
+export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -26,8 +26,17 @@ export function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white/80 px-6 py-3 backdrop-blur-sm">
-      <p className="text-sm font-medium text-gray-500">{section}</p>
+    <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white/80 px-4 py-3 backdrop-blur-sm lg:px-6">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onMenuClick}
+          aria-label="Open menu"
+          className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 lg:hidden"
+        >
+          <Menu size={20} />
+        </button>
+        <p className="text-sm font-medium text-gray-500">{section}</p>
+      </div>
       <div className="flex items-center gap-4">
         {user && (
           <div className="flex items-center gap-2.5">
