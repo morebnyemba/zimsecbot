@@ -56,12 +56,14 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
     answers = QuizAnswerResultSerializer(many=True, read_only=True)
     total_marks = serializers.SerializerMethodField()
     marks_awarded = serializers.SerializerMethodField()
+    subject_name = serializers.CharField(source="quiz.subject.name", read_only=True)
+    subject_code = serializers.CharField(source="quiz.subject.code", read_only=True)
 
     class Meta:
         model = QuizAttempt
         fields = [
             "id", "quiz", "score", "total_marks", "marks_awarded",
-            "started_at", "completed_at", "answers",
+            "subject_name", "subject_code", "started_at", "completed_at", "answers",
         ]
 
     def get_total_marks(self, obj):

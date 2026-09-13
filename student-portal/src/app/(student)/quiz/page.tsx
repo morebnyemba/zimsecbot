@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ListChecks, Play } from "lucide-react";
 
 import { apiFetch, type Paginated } from "@/lib/api";
@@ -10,7 +10,16 @@ import type { Quiz, Subject } from "@/lib/types";
 type Topic = { id: string; subject: string; name: string; order: number };
 
 export default function QuizGeneratePage() {
+  return (
+    <Suspense fallback={null}>
+      <QuizGenerateForm />
+    </Suspense>
+  );
+}
+
+function QuizGenerateForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [subjectId, setSubjectId] = useState("");
@@ -28,6 +37,15 @@ export default function QuizGeneratePage() {
 
     loadSubjects();
   }, []);
+
+  useEffect(() => {
+    // Pre-fill from a "Practice this" deep link, e.g. /quiz?subject=<id>&topic=<id>.
+    const s = searchParams.get("subject");
+    const t = searchParams.get("topic");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reading the initial deep-link params once
+    if (s) setSubjectId(s);
+    if (t) setTopicId(t);
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadTopics() {

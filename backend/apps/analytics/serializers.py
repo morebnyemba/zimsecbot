@@ -31,4 +31,13 @@ class RecommendationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recommendation
-        fields = ["id", "subject_name", "topic_name", "reason", "message", "created_at"]
+        fields = [
+            "id",
+            "subject_id",
+            "subject_name",
+            "topic_id",
+            "topic_name",
+            "reason",
+            "message",
+            "created_at",
+        ]

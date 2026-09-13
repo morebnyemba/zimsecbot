@@ -44,11 +44,15 @@ class MyQuizAttemptListView(generics.ListAPIView):
     serializer_class = QuizAttemptSerializer
 
     def get_queryset(self):
-        return QuizAttempt.objects.filter(user=self.request.user).order_by("-started_at")
+        return (
+            QuizAttempt.objects.filter(user=self.request.user)
+            .select_related("quiz__subject")
+            .order_by("-started_at")
+        )
 
 
 class QuizAttemptDetailView(generics.RetrieveAPIView):
     serializer_class = QuizAttemptSerializer
 
     def get_queryset(self):
-        return QuizAttempt.objects.filter(user=self.request.user)
+        return QuizAttempt.objects.filter(user=self.request.user).select_related("quiz__subject")
