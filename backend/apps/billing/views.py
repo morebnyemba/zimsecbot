@@ -47,7 +47,12 @@ class SubscriptionDetailView(APIView):
             .first()
         )
         if not subscription:
-            return Response(None)
+            # Not Response(None): DRF's JSONRenderer special-cases None to
+            # render as a truly empty body (not the string "null"), which
+            # breaks any client that calls .json() on a 200 unconditionally.
+            # 204 is both the correct status for "nothing to return" and
+            # what the admin frontend's apiFetch already special-cases.
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(SubscriptionSerializer(subscription).data)
 
 

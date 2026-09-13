@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Mail, Lock, LogIn } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
 import { ApiError } from "@/lib/api";
@@ -39,10 +40,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center px-4">
+    <div className="flex flex-1 items-center justify-center bg-gradient-to-br from-brand-50 via-white to-white px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 rounded-lg border border-gray-200 bg-white p-8 shadow-sm"
+        className="w-full max-w-sm space-y-4 rounded-xl border border-gray-200 bg-white p-8 shadow-lg shadow-brand-900/5"
       >
         <div className="space-y-4">
           <Logo />
@@ -60,41 +61,48 @@ export default function LoginPage() {
           <label htmlFor="email" className="text-sm font-medium text-gray-700">
             Email
           </label>
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-          />
+          <div className="relative">
+            <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none"
+            />
+          </div>
         </div>
 
         <div className="space-y-1">
           <label htmlFor="password" className="text-sm font-medium text-gray-700">
             Password
           </label>
-          <input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-          />
+          <div className="relative">
+            <Lock size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none"
+            />
+          </div>
         </div>
 
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
         >
+          <LogIn size={16} />
           {submitting ? "Signing in..." : "Sign in"}
         </button>
 
         <p className="text-center text-sm text-gray-500">
           New here?{" "}
-          <Link href="/register" className="font-medium text-blue-600 hover:underline">
+          <Link href="/register" className="font-medium text-brand-600 hover:underline">
             Create an account
           </Link>
         </p>

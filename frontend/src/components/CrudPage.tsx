@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Plus, Pencil, Trash2, Inbox, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { ApiError, apiFetch, type Paginated } from "@/lib/api";
 import type { ColumnConfig, FieldConfig, RecordWithId } from "@/lib/crud-types";
@@ -279,8 +280,9 @@ export function CrudPage<T extends RecordWithId>({
         <h1 className="text-xl font-semibold">{title}</h1>
         <button
           onClick={openCreateForm}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
+          <Plus size={16} />
           New
         </button>
       </div>
@@ -296,7 +298,7 @@ export function CrudPage<T extends RecordWithId>({
           {formError && (
             <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</p>
           )}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {fields.map((field) => (
               <div key={field.name} className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">{field.label}</label>
@@ -308,7 +310,7 @@ export function CrudPage<T extends RecordWithId>({
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+              className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
             >
               {submitting ? "Saving..." : "Save"}
             </button>
@@ -325,11 +327,24 @@ export function CrudPage<T extends RecordWithId>({
 
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
         {loading ? (
-          <p className="p-6 text-sm text-gray-400">Loading…</p>
+          <div className="space-y-3 p-6">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-4 animate-pulse rounded bg-gray-100" />
+            ))}
+          </div>
         ) : listError ? (
           <p className="p-6 text-sm text-red-600">{listError}</p>
         ) : items.length === 0 ? (
-          <p className="p-6 text-sm text-gray-400">No records yet.</p>
+          <div className="flex flex-col items-center gap-2 p-12 text-center">
+            <Inbox size={28} className="text-gray-300" />
+            <p className="text-sm text-gray-400">No records yet.</p>
+            <button
+              onClick={openCreateForm}
+              className="mt-1 text-sm font-medium text-brand-600 hover:underline"
+            >
+              Create the first one
+            </button>
+          </div>
         ) : (
           <table className="w-full text-left text-sm">
             <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
@@ -351,18 +366,24 @@ export function CrudPage<T extends RecordWithId>({
                     </td>
                   ))}
                   <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => openEditForm(item)}
-                      className="mr-3 text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex justify-end gap-1">
+                      <button
+                        onClick={() => openEditForm(item)}
+                        title="Edit"
+                        aria-label="Edit"
+                        className="rounded-md p-1.5 text-gray-500 hover:bg-brand-50 hover:text-brand-700"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        title="Delete"
+                        aria-label="Delete"
+                        className="rounded-md p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -376,16 +397,18 @@ export function CrudPage<T extends RecordWithId>({
           <button
             disabled={!prevUrl}
             onClick={() => prevUrl && fetchList(prevUrl)}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+            className="flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
           >
+            <ChevronLeft size={15} />
             Previous
           </button>
           <button
             disabled={!nextUrl}
             onClick={() => nextUrl && fetchList(nextUrl)}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+            className="flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
           >
             Next
+            <ChevronRight size={15} />
           </button>
         </div>
       )}

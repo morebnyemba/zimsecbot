@@ -38,10 +38,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center px-4">
+    <div className="flex flex-1 items-center justify-center bg-gradient-to-br from-brand-50 via-white to-white px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 rounded-lg border border-gray-200 bg-white p-8 shadow-sm"
+        className="w-full max-w-sm space-y-4 rounded-xl border border-gray-200 bg-white p-8 shadow-lg shadow-brand-900/5"
       >
         <div className="space-y-4">
           <Logo />
@@ -65,7 +65,7 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
           />
         </div>
 
@@ -79,14 +79,14 @@ export default function LoginPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
           />
         </div>
 
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+          className="w-full rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
         >
           {submitting ? "Signing in..." : "Sign in"}
         </button>
