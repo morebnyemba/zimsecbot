@@ -32,8 +32,8 @@ export function Logo({
         </defs>
       </svg>
       {withWordmark && (
-        <span className="text-lg font-semibold tracking-tight text-gray-900">
-          Zim<span className="text-brand-600">fundi</span>
+        <span className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-50">
+          Zim<span className="text-brand-600 dark:text-brand-400">fundi</span>
         </span>
       )}
     </span>

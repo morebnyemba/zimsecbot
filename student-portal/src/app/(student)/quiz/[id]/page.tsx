@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
+import { CheckCircle2, ListChecks, RotateCcw, Send, XCircle } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
 import type { Quiz, QuizAttempt } from "@/lib/types";
@@ -44,40 +46,91 @@ export default function QuizTakePage() {
     }
   }
 
-  if (loading) return <p className="text-gray-400">Loading…</p>;
+  if (loading) {
+    return (
+      <div className="max-w-2xl space-y-4">
+        <div className="h-6 w-24 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-20 animate-pulse rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
+          />
+        ))}
+      </div>
+    );
+  }
   if (!quiz) return <p className="text-gray-400">Quiz not found.</p>;
+
+  const answeredCount = Object.values(answers).filter(Boolean).length;
 
   if (attempt) {
     const resultByQuestion = new Map(attempt.answers.map((a) => [a.question_id, a]));
+    const total = attempt.total_marks || 1;
+    const pct = Math.round((attempt.marks_awarded / total) * 100);
     return (
       <div className="max-w-2xl space-y-6">
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h1 className="text-xl font-semibold">Quiz results</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Score: {attempt.marks_awarded} / {attempt.total_marks}
-          </p>
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-50">Quiz results</h1>
+          <div className="mt-3 flex items-center gap-3">
+            <p className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
+              {attempt.marks_awarded}/{attempt.total_marks}
+            </p>
+            <span className="text-sm text-gray-500 dark:text-gray-400">({pct}%)</span>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Link
+              href="/quiz"
+              className="flex items-center gap-1.5 rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              <RotateCcw size={14} />
+              New quiz
+            </Link>
+            <Link
+              href="/progress"
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              View progress
+            </Link>
+          </div>
         </div>
         <div className="space-y-4">
           {quiz.quiz_questions.map((q) => {
             const result = resultByQuestion.get(q.id);
+            const correct = result?.is_correct;
             return (
               <div
                 key={q.id}
-                className={`rounded-lg border p-4 shadow-sm ${
-                  result?.is_correct
-                    ? "border-green-200 bg-green-50"
-                    : "border-red-200 bg-red-50"
-                }`}
+                className={
+                  correct
+                    ? "rounded-lg border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-900 dark:bg-emerald-900/20"
+                    : "rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm dark:border-red-900 dark:bg-red-900/20"
+                }
               >
-                <p className="font-medium">{q.question_text}</p>
-                <p className="mt-1 text-sm text-gray-600">Your answer: {answers[q.id] || "—"}</p>
-                <p className="mt-1 text-sm text-gray-600">
-                  {result?.is_correct ? "Correct" : "Incorrect"} · {result?.marks_awarded}/
-                  {q.marks} marks
-                </p>
-                {result?.explanation && (
-                  <p className="mt-2 text-sm text-gray-700">{result.explanation}</p>
-                )}
+                <div className="flex items-start gap-2">
+                  {correct ? (
+                    <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  ) : (
+                    <XCircle size={17} className="mt-0.5 shrink-0 text-red-600 dark:text-red-400" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{q.question_text}</p>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      Your answer: {answers[q.id] || "—"}
+                    </p>
+                    <p
+                      className={
+                        correct
+                          ? "mt-1 text-sm font-medium text-emerald-700 dark:text-emerald-400"
+                          : "mt-1 text-sm font-medium text-red-700 dark:text-red-400"
+                      }
+                    >
+                      {correct ? "Correct" : "Incorrect"} · {result?.marks_awarded}/{q.marks} marks
+                    </p>
+                    {result?.explanation && (
+                      <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{result.explanation}</p>
+                    )}
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -88,22 +141,48 @@ export default function QuizTakePage() {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-4">
-      <h1 className="text-xl font-semibold">Quiz</h1>
+      <div>
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
+            <ListChecks size={19} />
+          </span>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-50">Quiz</h1>
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+            <div
+              className="h-full rounded-full bg-brand-500 transition-[width]"
+              style={{ width: `${(answeredCount / quiz.quiz_questions.length) * 100}%` }}
+            />
+          </div>
+          <span className="shrink-0 text-xs text-gray-400">
+            {answeredCount}/{quiz.quiz_questions.length} answered
+          </span>
+        </div>
+      </div>
+
       {quiz.quiz_questions.map((q, idx) => (
-        <div key={q.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="font-medium">
+        <div
+          key={q.id}
+          className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+        >
+          <p className="font-medium text-gray-900 dark:text-gray-100">
             {idx + 1}. {q.question_text}
           </p>
           {q.question_type === "mcq" && q.options.length > 0 ? (
             <div className="mt-3 space-y-2">
               {q.options.map((option) => (
-                <label key={option} className="flex items-center gap-2 text-sm">
+                <label
+                  key={option}
+                  className="flex items-center gap-2 rounded-md border border-transparent px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
                   <input
                     type="radio"
                     name={q.id}
                     value={option}
                     checked={answers[q.id] === option}
                     onChange={() => setAnswers((prev) => ({ ...prev, [q.id]: option }))}
+                    className="accent-brand-600"
                   />
                   {option}
                 </label>
@@ -113,7 +192,7 @@ export default function QuizTakePage() {
             <textarea
               value={answers[q.id] ?? ""}
               onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-              className="mt-3 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="mt-3 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               rows={3}
             />
           )}
@@ -122,8 +201,9 @@ export default function QuizTakePage() {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
       >
+        <Send size={15} />
         {submitting ? "Submitting..." : "Submit quiz"}
       </button>
     </form>
