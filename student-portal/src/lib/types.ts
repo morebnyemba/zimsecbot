@@ -17,6 +17,7 @@ export type PastPaper = {
   id: string;
   subject: string;
   subject_name: string;
+  subject_code: string;
   year: number;
   session: string;
   paper_number: number;
@@ -29,11 +30,14 @@ export type PastPaper = {
 export type Note = {
   id: string;
   subject: string;
+  subject_name: string;
+  subject_code: string;
   topic: string | null;
+  topic_name: string | null;
   subtopic: string | null;
   title: string;
   content: string;
-  media: string | null;
+  media: string[];
 };
 
 export type QuizQuestion = {
@@ -130,4 +134,20 @@ export type StudentAnalytics = {
   recommendations: Recommendation[];
   streak: StudyStreak | null;
   recent_scores: (number | null)[];
+};
+
+export type Plan = {
+  id: string;
+  name: string;
+  code: string;
+  price: string;
+  billing_period: string;
+};
+
+export type Subscription = {
+  id: string;
+  plan: Plan;
+  status: string;
+  current_period_end: string;
+  auto_renew: boolean;
 };

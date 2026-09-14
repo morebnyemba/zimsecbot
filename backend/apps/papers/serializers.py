@@ -13,6 +13,7 @@ class MarkingSchemeSerializer(serializers.ModelSerializer):
 
 class PastPaperSerializer(serializers.ModelSerializer):
     subject_name = serializers.CharField(source="subject.name", read_only=True)
+    subject_code = serializers.CharField(source="subject.code", read_only=True)
     subject = serializers.PrimaryKeyRelatedField(queryset=Subject.objects.all())
     marking_scheme = serializers.PrimaryKeyRelatedField(
         queryset=MarkingScheme.objects.all(), required=False, allow_null=True
@@ -22,6 +23,6 @@ class PastPaperSerializer(serializers.ModelSerializer):
     class Meta:
         model = PastPaper
         fields = [
-            "id", "subject", "subject_name", "year", "session", "paper_number",
+            "id", "subject", "subject_name", "subject_code", "year", "session", "paper_number",
             "paper_type", "file", "marking_scheme", "marking_scheme_detail",
         ]
