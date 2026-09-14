@@ -67,6 +67,8 @@ export type QuizAttempt = {
   score: number | null;
   total_marks: number;
   marks_awarded: number;
+  subject_name: string;
+  subject_code: string;
   started_at: string;
   completed_at: string | null;
   answers: QuizAnswerResult[];
@@ -111,7 +113,9 @@ export type StudyStreak = {
 
 export type Recommendation = {
   id: string;
+  subject_id: string;
   subject_name: string;
+  topic_id: string;
   topic_name: string;
   reason: string;
   message: string;
