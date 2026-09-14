@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Paperclip, Search, StickyNote as StickyNoteIcon } from "lucide-react";
 
 import { apiFetch, type Paginated } from "@/lib/api";
-import type { Note, Subject } from "@/lib/types";
+import { subjectColor } from "@/lib/subject-colors";
+import type { Note, StudentSubject, Subject } from "@/lib/types";
 
 export default function NotesPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [mySubjects, setMySubjects] = useState<StudentSubject[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [subjectFilter, setSubjectFilter] = useState("");
   const [search, setSearch] = useState("");
@@ -26,12 +28,16 @@ export default function NotesPage() {
   }, []);
 
   useEffect(() => {
-    async function loadSubjects() {
-      const res = await apiFetch<Paginated<Subject>>("/api/v1/subjects/?is_active=true");
-      setSubjects(res.results);
+    async function loadFilters() {
+      const [subjectsRes, mineRes] = await Promise.all([
+        apiFetch<Paginated<Subject>>("/api/v1/subjects/?is_active=true"),
+        apiFetch<Paginated<StudentSubject>>("/api/v1/profile/me/subjects/"),
+      ]);
+      setSubjects(subjectsRes.results);
+      setMySubjects(mineRes.results);
     }
 
-    loadSubjects();
+    loadFilters();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time fetch on mount
     loadNotes("", "");
   }, [loadNotes]);
@@ -47,6 +53,7 @@ export default function NotesPage() {
   }
 
   if (activeNote) {
+    const color = subjectColor(activeNote.subject_code || activeNote.subject);
     return (
       <div className="space-y-4">
         <button
@@ -57,20 +64,36 @@ export default function NotesPage() {
           Back to notes
         </button>
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${color.bg} ${color.text}`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${color.dot}`} />
+              {activeNote.subject_name}
+            </span>
+            {activeNote.topic_name && (
+              <span className="text-xs text-gray-400">{activeNote.topic_name}</span>
+            )}
+          </div>
           <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-50">{activeNote.title}</h1>
           <p className="mt-4 whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">
             {activeNote.content}
           </p>
-          {activeNote.media && (
-            <a
-              href={activeNote.media}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline"
-            >
-              <Paperclip size={14} />
-              View attached media
-            </a>
+          {activeNote.media.length > 0 && (
+            <div className="mt-4 flex flex-col gap-1.5">
+              {activeNote.media.map((url, i) => (
+                <a
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline"
+                >
+                  <Paperclip size={14} />
+                  {activeNote.media.length > 1 ? `Attached media ${i + 1}` : "View attached media"}
+                </a>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -114,6 +137,39 @@ export default function NotesPage() {
         </div>
       </div>
 
+      {mySubjects.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => handleFilterChange("")}
+            className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+              subjectFilter === ""
+                ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+            }`}
+          >
+            All
+          </button>
+          {mySubjects.map((s) => {
+            const color = subjectColor(s.subject.code || s.subject.id);
+            const active = subjectFilter === s.subject.id;
+            return (
+              <button
+                key={s.id}
+                onClick={() => handleFilterChange(s.subject.id)}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+                  active
+                    ? `${color.bg} ${color.text} ring-1 ${color.ring}`
+                    : "bg-gray-50 text-gray-500 hover:bg-gray-100 dark:bg-gray-800/60 dark:text-gray-400 dark:hover:bg-gray-800"
+                }`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${color.dot}`} />
+                {s.subject.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {loading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((i) => (
@@ -130,16 +186,25 @@ export default function NotesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {notes.map((note) => (
-            <button
-              key={note.id}
-              onClick={() => setActiveNote(note)}
-              className="rounded-lg border border-gray-200 bg-white p-4 text-left shadow-sm transition-shadow hover:border-brand-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-brand-700"
-            >
-              <p className="font-medium text-gray-900 dark:text-gray-50">{note.title}</p>
-              <p className="mt-1 line-clamp-3 text-sm text-gray-500 dark:text-gray-400">{note.content}</p>
-            </button>
-          ))}
+          {notes.map((note) => {
+            const color = subjectColor(note.subject_code || note.subject);
+            return (
+              <button
+                key={note.id}
+                onClick={() => setActiveNote(note)}
+                className="flex flex-col items-start rounded-lg border border-gray-200 bg-white p-4 text-left shadow-sm transition-shadow hover:border-brand-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-brand-700"
+              >
+                <span
+                  className={`mb-2 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${color.bg} ${color.text}`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${color.dot}`} />
+                  {note.subject_name}
+                </span>
+                <p className="font-medium text-gray-900 dark:text-gray-50">{note.title}</p>
+                <p className="mt-1 line-clamp-3 text-sm text-gray-500 dark:text-gray-400">{note.content}</p>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
