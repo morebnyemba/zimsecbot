@@ -98,7 +98,10 @@ export type AskResponse = {
 
 export type TopicPerformance = {
   id: string;
+  subject_id: string;
   subject_name: string;
+  subject_code: string;
+  topic_id: string;
   topic_name: string;
   attempts_count: number;
   correct_count: number;
