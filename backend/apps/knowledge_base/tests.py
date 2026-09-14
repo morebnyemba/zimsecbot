@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from django.core.management import call_command
 
 from apps.notes.models import Note
 from apps.subjects.models import Subject
@@ -73,3 +74,52 @@ def test_search_orders_by_similarity(mock_embed, note):
 
     assert results[0].id == close.id
     assert results[1].id == far.id
+
+
+@pytest.mark.django_db
+@patch("apps.knowledge_base.services.embed_text", return_value=[0.1] * 768)
+def test_backfill_command_indexes_unindexed_notes_sync(mock_embed, note):
+    call_command("backfill_knowledge_base", "--sync")
+
+    document = KnowledgeDocument.objects.get(note=note)
+    assert document.indexed_at is not None
+    assert document.chunks.exists()
+
+
+@pytest.mark.django_db
+@patch("apps.knowledge_base.services.embed_text", return_value=[0.1] * 768)
+def test_backfill_command_skips_already_indexed_notes_by_default(mock_embed, note):
+    services.ingest_note(note)
+
+    mock_embed.reset_mock()
+    call_command("backfill_knowledge_base", "--sync")
+
+    mock_embed.assert_not_called()
+
+
+@pytest.mark.django_db
+@patch("apps.knowledge_base.services.embed_text", return_value=[0.1] * 768)
+def test_backfill_command_all_reindexes_already_indexed_notes(mock_embed, note):
+    services.ingest_note(note)
+
+    mock_embed.reset_mock()
+    call_command("backfill_knowledge_base", "--all", "--sync")
+
+    mock_embed.assert_called()
+
+
+@pytest.mark.django_db
+@patch("apps.knowledge_base.services.embed_text", return_value=[0.1] * 768)
+def test_backfill_command_dry_run_does_not_index(mock_embed, note):
+    call_command("backfill_knowledge_base", "--dry-run")
+
+    assert not KnowledgeDocument.objects.filter(note=note).exists()
+    mock_embed.assert_not_called()
+
+
+@pytest.mark.django_db
+@patch("apps.knowledge_base.tasks.ingest_note_task.delay")
+def test_backfill_command_default_mode_enqueues_celery_task(mock_delay, note):
+    call_command("backfill_knowledge_base")
+
+    mock_delay.assert_called_once_with(str(note.id))
