@@ -212,13 +212,16 @@ CACHES = {
 }
 
 # --- Third-party API credentials ---
-# DB-driven provider config (per AI_ARCHITECTURE.md / MONETIZATION.md) supersedes
-# these env defaults once the billing/ai_tutor apps' provider models are in place.
+# DB-driven provider config (AIProvider, WhatsAppProvider — see AI_ARCHITECTURE.md /
+# MONETIZATION.md) supersedes these env defaults whenever an active provider row
+# exists; these are the fallback (and the source `seed_providers_from_env` copies
+# from into those DB rows).
 GEMINI_API_KEY = env("GEMINI_API_KEY", default="")
 WHATSAPP_APP_SECRET = env("WHATSAPP_APP_SECRET", default="")
 WHATSAPP_VERIFY_TOKEN = env("WHATSAPP_VERIFY_TOKEN", default="")
 WHATSAPP_ACCESS_TOKEN = env("WHATSAPP_ACCESS_TOKEN", default="")
 WHATSAPP_PHONE_NUMBER_ID = env("WHATSAPP_PHONE_NUMBER_ID", default="")
+WHATSAPP_GRAPH_API_VERSION = env("WHATSAPP_GRAPH_API_VERSION", default="v20.0")
 PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", default="http://localhost:8000")
 CONVERSATION_TIMEOUT_MINUTES = env.int("CONVERSATION_TIMEOUT_MINUTES", default=30)
 PAYNOW_INTEGRATION_ID = env("PAYNOW_INTEGRATION_ID", default="")

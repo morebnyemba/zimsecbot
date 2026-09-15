@@ -4,7 +4,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-from .encryption import decrypt_value, encrypt_value
+from apps.common.encryption import decrypt_value, encrypt_value
+
 from .models import AIProvider, AISession, Message
 from .tasks import answer_whatsapp_question
 

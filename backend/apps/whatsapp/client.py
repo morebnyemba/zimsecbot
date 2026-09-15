@@ -1,16 +1,17 @@
 import requests
-from django.conf import settings
 
-GRAPH_API_VERSION = "v20.0"
+from .providers import get_active_credentials
 
 
 class WhatsAppClient:
     """Thin wrapper around the Meta WhatsApp Cloud API send endpoint."""
 
-    def __init__(self, access_token=None, phone_number_id=None):
-        self.access_token = access_token or settings.WHATSAPP_ACCESS_TOKEN
-        self.phone_number_id = phone_number_id or settings.WHATSAPP_PHONE_NUMBER_ID
-        self.base_url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{self.phone_number_id}"
+    def __init__(self, access_token=None, phone_number_id=None, graph_api_version=None):
+        credentials = get_active_credentials()
+        self.access_token = access_token or credentials.access_token
+        self.phone_number_id = phone_number_id or credentials.phone_number_id
+        self.graph_api_version = graph_api_version or credentials.graph_api_version
+        self.base_url = f"https://graph.facebook.com/{self.graph_api_version}/{self.phone_number_id}"
 
     def _post(self, payload):
         response = requests.post(

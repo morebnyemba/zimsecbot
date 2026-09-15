@@ -1,12 +1,12 @@
 import hashlib
 import hmac
 
-from django.conf import settings
 from django.http import HttpResponse, HttpResponseForbidden
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .providers import get_active_credentials
 from .tasks import process_inbound_event
 
 
@@ -18,10 +18,11 @@ class WhatsAppWebhookView(APIView):
         mode = request.query_params.get("hub.mode")
         token = request.query_params.get("hub.verify_token")
         challenge = request.query_params.get("hub.challenge", "")
+        verify_token = get_active_credentials().verify_token
         if (
             mode == "subscribe"
-            and settings.WHATSAPP_VERIFY_TOKEN
-            and hmac.compare_digest(token or "", settings.WHATSAPP_VERIFY_TOKEN)
+            and verify_token
+            and hmac.compare_digest(token or "", verify_token)
         ):
             return HttpResponse(challenge, content_type="text/plain")
         return HttpResponseForbidden()
@@ -33,7 +34,7 @@ class WhatsAppWebhookView(APIView):
         return Response(status=status.HTTP_200_OK)
 
     def _verify_signature(self, request):
-        secret = settings.WHATSAPP_APP_SECRET
+        secret = get_active_credentials().app_secret
         if not secret:
             return False
         signature = request.headers.get("X-Hub-Signature-256", "")
