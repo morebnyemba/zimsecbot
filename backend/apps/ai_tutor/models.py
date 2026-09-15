@@ -1,9 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from apps.common.encryption import decrypt_value, encrypt_value
 from apps.common.models import BaseModel
-
-from .encryption import decrypt_value, encrypt_value
 
 
 class AIProvider(BaseModel):
