@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Bot, Plus, Send, Sparkles, User } from "lucide-react";
 
 import { apiFetch, isFeatureLockedError, type Paginated } from "@/lib/api";
@@ -18,9 +19,7 @@ export default function AskPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [upgradePrompt, setUpgradePrompt] = useState<{ message: string; upgradeUrl: string } | null>(
-    null,
-  );
+  const [upgradePrompt, setUpgradePrompt] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,10 +70,7 @@ export default function AskPage() {
       setMessages((prev) => [...prev, { role: "assistant", content: res.answer }]);
     } catch (err) {
       if (isFeatureLockedError(err)) {
-        setUpgradePrompt({
-          message: err.body.error.message,
-          upgradeUrl: err.body.error.upgrade_url,
-        });
+        setUpgradePrompt(err.body.error.message);
       } else {
         setError("Could not reach the AI tutor. Please try again.");
       }
@@ -143,13 +139,13 @@ export default function AskPage() {
 
       {upgradePrompt && (
         <div className="flex items-center justify-between rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
-          <span>{upgradePrompt.message}</span>
-          <a
-            href={upgradePrompt.upgradeUrl}
+          <span>{upgradePrompt}</span>
+          <Link
+            href="/billing"
             className="ml-4 shrink-0 rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700"
           >
             Upgrade plan
-          </a>
+          </Link>
         </div>
       )}
       {error && (

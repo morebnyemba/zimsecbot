@@ -13,6 +13,7 @@ import {
   Sparkles,
   TrendingUp,
   User,
+  Wallet,
   Flame,
   PanelLeftClose,
   PanelLeftOpen,
@@ -32,6 +33,7 @@ export const NAV_ITEMS: { href: string; label: string; icon: LucideIcon; group?:
   { href: "/quiz", label: "Quizzes", icon: ListChecks, group: "practice" },
   { href: "/ask", label: "AI Tutor", icon: Sparkles, group: "practice" },
   { href: "/progress", label: "Progress", icon: TrendingUp, group: "practice" },
+  { href: "/billing", label: "Upgrade", icon: Wallet },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
@@ -72,6 +74,7 @@ export function Sidebar() {
   }
 
   const dashboardItem = NAV_ITEMS.find((item) => item.href === "/dashboard")!;
+  const billingItem = NAV_ITEMS.find((item) => item.href === "/billing")!;
   const profileItem = NAV_ITEMS.find((item) => item.href === "/profile")!;
   const learnItems = NAV_ITEMS.filter((item) => item.group === "learn");
   const practiceItems = NAV_ITEMS.filter((item) => item.group === "practice");
@@ -167,6 +170,7 @@ export function Sidebar() {
       </div>
 
       <div className="mt-auto flex flex-col gap-0.5 border-t border-gray-100 pt-3 dark:border-gray-800">
+        {renderItem(billingItem)}
         {renderItem(profileItem)}
         <button
           onClick={toggleCollapsed}

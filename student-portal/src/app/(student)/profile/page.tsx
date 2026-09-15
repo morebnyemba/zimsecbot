@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { CreditCard, Save, User } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
@@ -69,7 +70,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <Link
+        href="/billing"
+        className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-brand-300 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-brand-700"
+      >
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
             <CreditCard size={17} />
@@ -85,12 +89,10 @@ export default function ProfilePage() {
             </p>
           </div>
         </div>
-        {!subscription && (
-          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-            Free
-          </span>
-        )}
-      </div>
+        <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+          {subscription ? "Manage" : "Upgrade"}
+        </span>
+      </Link>
 
       <form
         onSubmit={handleSubmit}
