@@ -142,12 +142,22 @@ export type Plan = {
   code: string;
   price: string;
   billing_period: string;
+  features: string[];
+  quotas: Record<string, number>;
+  is_active: boolean;
 };
 
 export type Subscription = {
   id: string;
   plan: Plan;
   status: string;
+  current_period_start: string;
   current_period_end: string;
   auto_renew: boolean;
+};
+
+export type UsageRecord = {
+  feature_key: string;
+  count: number;
+  period_date: string;
 };

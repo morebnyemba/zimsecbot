@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Download, FileText } from "lucide-react";
 
 import { apiFetch, isFeatureLockedError, type Paginated } from "@/lib/api";
@@ -13,9 +14,7 @@ export default function PapersPage() {
   const [papers, setPapers] = useState<PastPaper[]>([]);
   const [subjectFilter, setSubjectFilter] = useState("");
   const [loading, setLoading] = useState(true);
-  const [upgradePrompt, setUpgradePrompt] = useState<{ message: string; upgradeUrl: string } | null>(
-    null,
-  );
+  const [upgradePrompt, setUpgradePrompt] = useState<string | null>(null);
 
   const loadPapers = useCallback(async (subjectId: string) => {
     setLoading(true);
@@ -51,10 +50,7 @@ export default function PapersPage() {
       window.open(data.file_url, "_blank");
     } catch (err) {
       if (isFeatureLockedError(err)) {
-        setUpgradePrompt({
-          message: err.body.error.message,
-          upgradeUrl: err.body.error.upgrade_url,
-        });
+        setUpgradePrompt(err.body.error.message);
         return;
       }
       throw err;
@@ -65,13 +61,13 @@ export default function PapersPage() {
     <div className="space-y-6">
       {upgradePrompt && (
         <div className="flex items-center justify-between rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
-          <span>{upgradePrompt.message}</span>
-          <a
-            href={upgradePrompt.upgradeUrl}
+          <span>{upgradePrompt}</span>
+          <Link
+            href="/billing"
             className="ml-4 shrink-0 rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700"
           >
             Upgrade plan
-          </a>
+          </Link>
         </div>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
