@@ -28,8 +28,21 @@ class AIProviderForm(forms.ModelForm):
 @admin.register(AIProvider)
 class AIProviderAdmin(admin.ModelAdmin):
     form = AIProviderForm
-    list_display = ("name", "provider_type", "model_name", "is_active")
+    list_display = ("name", "provider_type", "model_name", "is_active", "api_key_is_set")
     list_filter = ("provider_type", "is_active")
+    readonly_fields = ("api_key_status",)
+    fieldsets = (
+        (None, {"fields": ("name", "provider_type", "model_name", "is_active")}),
+        ("Credentials", {"fields": ("api_key_status", "api_key")}),
+    )
+
+    @admin.display(boolean=True, description="API key set")
+    def api_key_is_set(self, obj):
+        return bool(obj.api_key_encrypted)
+
+    @admin.display(description="Current API key")
+    def api_key_status(self, obj):
+        return "●●●● set" if obj and obj.api_key_encrypted else "Not set"
 
 
 class MessageInline(admin.TabularInline):

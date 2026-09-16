@@ -6,6 +6,7 @@ from rest_framework.test import APIClient
 
 from apps.common.encryption import decrypt_value, encrypt_value
 
+from .admin import AIProviderAdmin
 from .models import AIProvider, AISession, Message
 from .tasks import answer_whatsapp_question
 
@@ -27,6 +28,28 @@ def test_ai_provider_set_and_get_api_key():
     provider.refresh_from_db()
     assert provider.api_key_encrypted != "abc123"
     assert provider.get_api_key() == "abc123"
+
+
+@pytest.mark.django_db
+def test_admin_api_key_status_reflects_unset_and_set():
+    admin = AIProviderAdmin(AIProvider, None)
+
+    empty = AIProvider.objects.create(name="Blank")
+    assert admin.api_key_is_set(empty) is False
+    assert admin.api_key_status(empty) == "Not set"
+
+    configured = AIProvider(name="Configured")
+    configured.set_api_key("abc123")
+    configured.save()
+
+    assert admin.api_key_is_set(configured) is True
+    assert admin.api_key_status(configured) == "●●●● set"
+
+
+def test_admin_api_key_status_handles_unsaved_instance():
+    admin = AIProviderAdmin(AIProvider, None)
+
+    assert admin.api_key_status(None) == "Not set"
 
 
 @pytest.fixture

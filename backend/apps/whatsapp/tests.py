@@ -8,6 +8,7 @@ import pytest
 from django.test import override_settings
 from rest_framework.test import APIClient
 
+from .admin import WhatsAppProviderAdmin
 from .client import WhatsAppClient
 from .models import WebhookEventLog, WhatsAppProvider
 from .providers import get_active_credentials
@@ -219,6 +220,34 @@ def test_whatsapp_client_uses_active_provider_graph_api_version():
     client = WhatsAppClient()
 
     assert client.base_url == "https://graph.facebook.com/v26.0/123456"
+
+
+@pytest.mark.django_db
+def test_admin_status_badges_reflect_unset_and_set_credentials():
+    admin = WhatsAppProviderAdmin(WhatsAppProvider, None)
+
+    empty = WhatsAppProvider.objects.create(name="Blank")
+    assert admin.access_token_is_set(empty) is False
+    assert admin.app_secret_is_set(empty) is False
+    assert admin.verify_token_is_set(empty) is False
+    assert admin.access_token_status(empty) == "Not set"
+
+    configured = WhatsAppProvider(name="Configured")
+    configured.set_access_token("token")
+    configured.set_app_secret("secret")
+    configured.set_verify_token("verify")
+    configured.save()
+
+    assert admin.access_token_is_set(configured) is True
+    assert admin.app_secret_is_set(configured) is True
+    assert admin.verify_token_is_set(configured) is True
+    assert admin.access_token_status(configured) == "●●●● set"
+
+
+def test_admin_status_badges_handle_unsaved_instance():
+    admin = WhatsAppProviderAdmin(WhatsAppProvider, None)
+
+    assert admin.access_token_status(None) == "Not set"
 
 
 @pytest.mark.django_db

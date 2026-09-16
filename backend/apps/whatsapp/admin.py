@@ -49,8 +49,57 @@ class WhatsAppProviderForm(forms.ModelForm):
 @admin.register(WhatsAppProvider)
 class WhatsAppProviderAdmin(admin.ModelAdmin):
     form = WhatsAppProviderForm
-    list_display = ("name", "phone_number_id", "graph_api_version", "is_active")
+    list_display = (
+        "name",
+        "phone_number_id",
+        "graph_api_version",
+        "is_active",
+        "access_token_is_set",
+        "app_secret_is_set",
+        "verify_token_is_set",
+    )
     list_filter = ("is_active",)
+    readonly_fields = ("access_token_status", "app_secret_status", "verify_token_status")
+    fieldsets = (
+        (None, {"fields": ("name", "phone_number_id", "graph_api_version", "is_active")}),
+        (
+            "Credentials",
+            {
+                "fields": (
+                    "access_token_status",
+                    "access_token",
+                    "app_secret_status",
+                    "app_secret",
+                    "verify_token_status",
+                    "verify_token",
+                )
+            },
+        ),
+    )
+
+    @admin.display(boolean=True, description="Access token set")
+    def access_token_is_set(self, obj):
+        return bool(obj.access_token_encrypted)
+
+    @admin.display(boolean=True, description="App secret set")
+    def app_secret_is_set(self, obj):
+        return bool(obj.app_secret_encrypted)
+
+    @admin.display(boolean=True, description="Verify token set")
+    def verify_token_is_set(self, obj):
+        return bool(obj.verify_token_encrypted)
+
+    @admin.display(description="Current access token")
+    def access_token_status(self, obj):
+        return "●●●● set" if obj and obj.access_token_encrypted else "Not set"
+
+    @admin.display(description="Current app secret")
+    def app_secret_status(self, obj):
+        return "●●●● set" if obj and obj.app_secret_encrypted else "Not set"
+
+    @admin.display(description="Current verify token")
+    def verify_token_status(self, obj):
+        return "●●●● set" if obj and obj.verify_token_encrypted else "Not set"
 
 
 @admin.register(WebhookEventLog)
