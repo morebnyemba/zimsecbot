@@ -1,12 +1,15 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from django.core.management import call_command
+from django.test import override_settings
 
+from apps.ai_tutor.models import AIProvider
 from apps.notes.models import Note
 from apps.subjects.models import Subject
 
 from . import services
+from .embeddings import embed_text
 from .models import KnowledgeChunk, KnowledgeDocument
 from .retrieval import search
 
@@ -123,3 +126,33 @@ def test_backfill_command_default_mode_enqueues_celery_task(mock_delay, note):
     call_command("backfill_knowledge_base")
 
     mock_delay.assert_called_once_with(str(note.id))
+
+
+# --- embed_text uses the same admin-rotatable Gemini key as chat generation ---
+
+
+@pytest.mark.django_db
+@patch("apps.knowledge_base.embeddings.genai.Client")
+def test_embed_text_uses_active_db_provider_key(mock_client_cls):
+    AIProvider.objects.create(name="Prod", api_key="db-key", is_active=True)
+    mock_response = MagicMock()
+    mock_response.embeddings = [MagicMock(values=[0.1, 0.2, 0.3])]
+    mock_client_cls.return_value.models.embed_content.return_value = mock_response
+
+    result = embed_text("photosynthesis")
+
+    mock_client_cls.assert_called_once_with(api_key="db-key")
+    assert result == [0.1, 0.2, 0.3]
+
+
+@pytest.mark.django_db
+@patch("apps.knowledge_base.embeddings.genai.Client")
+def test_embed_text_falls_back_to_settings_key_when_no_active_provider(mock_client_cls):
+    mock_response = MagicMock()
+    mock_response.embeddings = [MagicMock(values=[0.1])]
+    mock_client_cls.return_value.models.embed_content.return_value = mock_response
+
+    with override_settings(GEMINI_API_KEY="env-key"):
+        embed_text("x")
+
+    mock_client_cls.assert_called_once_with(api_key="env-key")

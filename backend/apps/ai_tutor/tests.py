@@ -2,9 +2,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from rest_framework.test import APIClient
 
 from .models import AIProvider, AISession, Message
+from .providers import get_active_api_key
 from .tasks import answer_whatsapp_question
 
 User = get_user_model()
@@ -16,6 +18,28 @@ def test_ai_provider_api_key_round_trips_as_plain_text():
 
     provider.refresh_from_db()
     assert provider.api_key == "abc123"
+
+
+@pytest.mark.django_db
+@override_settings(GEMINI_API_KEY="env-key")
+def test_get_active_api_key_falls_back_to_settings_when_no_active_provider():
+    assert get_active_api_key() == "env-key"
+
+
+@pytest.mark.django_db
+@override_settings(GEMINI_API_KEY="env-key")
+def test_get_active_api_key_prefers_active_db_provider():
+    AIProvider.objects.create(name="Prod", api_key="db-key", is_active=True)
+
+    assert get_active_api_key() == "db-key"
+
+
+@pytest.mark.django_db
+@override_settings(GEMINI_API_KEY="env-key")
+def test_get_active_api_key_ignores_inactive_provider():
+    AIProvider.objects.create(name="Off", api_key="db-key", is_active=False)
+
+    assert get_active_api_key() == "env-key"
 
 
 @pytest.mark.django_db
