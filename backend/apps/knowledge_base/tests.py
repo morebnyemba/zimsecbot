@@ -63,9 +63,7 @@ def test_ingest_note_continues_on_embedding_failure(mock_embed, note):
 @pytest.mark.django_db
 @patch("apps.knowledge_base.retrieval.embed_text", return_value=[1.0, 0.0, 0.0] + [0.0] * 765)
 def test_search_orders_by_similarity(mock_embed, note):
-    document = KnowledgeDocument.objects.create(
-        note=note, subject=note.subject, title=note.title
-    )
+    document = KnowledgeDocument.objects.create(note=note, subject=note.subject, title=note.title)
     close = KnowledgeChunk.objects.create(
         document=document, chunk_index=0, text="close", embedding=[0.9, 0.1, 0.0] + [0.0] * 765
     )
@@ -142,7 +140,8 @@ def test_embed_text_uses_active_db_provider_key(mock_client_cls):
     result = embed_text("photosynthesis")
 
     mock_client_cls.assert_called_once_with(api_key="db-key")
-    assert result == [0.1, 0.2, 0.3]
+    assert len(result) == 3
+    assert result == pytest.approx([v / (0.14**0.5) for v in [0.1, 0.2, 0.3]])
 
 
 @pytest.mark.django_db
@@ -156,3 +155,17 @@ def test_embed_text_falls_back_to_settings_key_when_no_active_provider(mock_clie
         embed_text("x")
 
     mock_client_cls.assert_called_once_with(api_key="env-key")
+
+
+@pytest.mark.django_db
+@patch("apps.knowledge_base.embeddings.genai.Client")
+def test_embed_text_pins_output_dimensionality_and_normalizes(mock_client_cls):
+    mock_response = MagicMock()
+    mock_response.embeddings = [MagicMock(values=[3.0, 4.0])]
+    mock_client_cls.return_value.models.embed_content.return_value = mock_response
+
+    result = embed_text("x")
+
+    _, kwargs = mock_client_cls.return_value.models.embed_content.call_args
+    assert kwargs["config"].output_dimensionality == 768
+    assert result == pytest.approx([0.6, 0.8])
