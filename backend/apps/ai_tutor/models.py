@@ -12,7 +12,7 @@ class AIProvider(BaseModel):
     provider_type = models.CharField(
         max_length=20, choices=ProviderType.choices, default=ProviderType.GEMINI
     )
-    model_name = models.CharField(max_length=100, default="gemini-1.5-flash")
+    model_name = models.CharField(max_length=100, default="gemini-3.6-flash")
     api_key = models.TextField(blank=True, default="")
     is_active = models.BooleanField(default=True)
 
