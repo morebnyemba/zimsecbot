@@ -138,27 +138,28 @@ def test_concurrent_duplicate_deliveries_processed_once(mock_client_cls):
 
 
 @pytest.mark.django_db
-def test_whatsapp_provider_set_and_get_secrets_round_trip():
-    provider = WhatsAppProvider(name="Meta Cloud API", phone_number_id="123456")
-    provider.set_access_token("token-abc")
-    provider.set_app_secret("secret-abc")
-    provider.set_verify_token("verify-abc")
-    provider.save()
+def test_whatsapp_provider_credentials_round_trip_as_plain_text():
+    provider = WhatsAppProvider.objects.create(
+        name="Meta Cloud API",
+        phone_number_id="123456",
+        access_token="token-abc",
+        app_secret="secret-abc",
+        verify_token="verify-abc",
+    )
 
     provider.refresh_from_db()
-    assert provider.access_token_encrypted != "token-abc"
-    assert provider.get_access_token() == "token-abc"
-    assert provider.get_app_secret() == "secret-abc"
-    assert provider.get_verify_token() == "verify-abc"
+    assert provider.access_token == "token-abc"
+    assert provider.app_secret == "secret-abc"
+    assert provider.verify_token == "verify-abc"
 
 
 @pytest.mark.django_db
-def test_whatsapp_provider_get_secrets_blank_when_unset():
+def test_whatsapp_provider_credentials_blank_by_default():
     provider = WhatsAppProvider.objects.create(name="Empty")
 
-    assert provider.get_access_token() == ""
-    assert provider.get_app_secret() == ""
-    assert provider.get_verify_token() == ""
+    assert provider.access_token == ""
+    assert provider.app_secret == ""
+    assert provider.verify_token == ""
 
 
 @pytest.mark.django_db
@@ -182,26 +183,29 @@ def test_get_active_credentials_falls_back_to_settings_when_no_active_provider()
 @pytest.mark.django_db
 @override_settings(WHATSAPP_ACCESS_TOKEN="env-token")
 def test_get_active_credentials_prefers_active_db_provider_over_settings():
-    provider = WhatsAppProvider(
-        name="Prod", phone_number_id="db-phone-id", graph_api_version="v26.0"
+    WhatsAppProvider.objects.create(
+        name="Prod",
+        waba_id="waba-123",
+        phone_number_id="db-phone-id",
+        graph_api_version="v26.0",
+        access_token="db-token",
+        app_secret="db-secret",
+        verify_token="db-verify",
     )
-    provider.set_access_token("db-token")
-    provider.set_app_secret("db-secret")
-    provider.set_verify_token("db-verify")
-    provider.save()
 
     credentials = get_active_credentials()
 
     assert credentials.access_token == "db-token"
     assert credentials.phone_number_id == "db-phone-id"
     assert credentials.graph_api_version == "v26.0"
+    assert credentials.waba_id == "waba-123"
 
 
 @pytest.mark.django_db
 def test_get_active_credentials_ignores_inactive_db_provider():
-    provider = WhatsAppProvider(name="Disabled", is_active=False)
-    provider.set_access_token("should-not-be-used")
-    provider.save()
+    WhatsAppProvider.objects.create(
+        name="Disabled", is_active=False, access_token="should-not-be-used"
+    )
 
     credentials = get_active_credentials()
 
@@ -209,12 +213,32 @@ def test_get_active_credentials_ignores_inactive_db_provider():
 
 
 @pytest.mark.django_db
+def test_saving_active_provider_deactivates_other_active_rows():
+    first = WhatsAppProvider.objects.create(name="First", is_active=True)
+    second = WhatsAppProvider.objects.create(name="Second", is_active=True)
+
+    first.refresh_from_db()
+    assert first.is_active is False
+    assert second.is_active is True
+
+
+@pytest.mark.django_db
+def test_saving_inactive_provider_does_not_touch_other_rows():
+    active = WhatsAppProvider.objects.create(name="Active", is_active=True)
+    WhatsAppProvider.objects.create(name="New", is_active=False)
+
+    active.refresh_from_db()
+    assert active.is_active is True
+
+
+@pytest.mark.django_db
 def test_whatsapp_client_uses_active_provider_graph_api_version():
-    provider = WhatsAppProvider(
-        name="Prod", phone_number_id="123456", graph_api_version="v26.0"
+    WhatsAppProvider.objects.create(
+        name="Prod",
+        phone_number_id="123456",
+        graph_api_version="v26.0",
+        access_token="db-token",
     )
-    provider.set_access_token("db-token")
-    provider.save()
 
     client = WhatsAppClient()
 
@@ -223,9 +247,9 @@ def test_whatsapp_client_uses_active_provider_graph_api_version():
 
 @pytest.mark.django_db
 def test_webhook_verification_challenge_uses_active_provider_verify_token(api_client):
-    provider = WhatsAppProvider(name="Prod", phone_number_id="123456")
-    provider.set_verify_token("db-verify")
-    provider.save()
+    WhatsAppProvider.objects.create(
+        name="Prod", phone_number_id="123456", verify_token="db-verify"
+    )
 
     response = api_client.get(
         "/api/v1/whatsapp/webhook/",

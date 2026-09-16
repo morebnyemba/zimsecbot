@@ -23,20 +23,22 @@ def test_health_check_returns_ok():
     WHATSAPP_APP_SECRET="env-secret",
     WHATSAPP_VERIFY_TOKEN="env-verify",
     WHATSAPP_GRAPH_API_VERSION="v20.0",
+    WHATSAPP_WABA_ID="env-waba-id",
 )
 def test_seed_providers_from_env_creates_provider_rows():
     call_command("seed_providers_from_env")
 
     ai_provider = AIProvider.objects.get(name="Default")
-    assert ai_provider.get_api_key() == "env-gemini-key"
+    assert ai_provider.api_key == "env-gemini-key"
     assert ai_provider.is_active is True
 
     whatsapp_provider = WhatsAppProvider.objects.get(name="Default")
-    assert whatsapp_provider.get_access_token() == "env-token"
+    assert whatsapp_provider.access_token == "env-token"
     assert whatsapp_provider.phone_number_id == "env-phone-id"
-    assert whatsapp_provider.get_app_secret() == "env-secret"
-    assert whatsapp_provider.get_verify_token() == "env-verify"
+    assert whatsapp_provider.app_secret == "env-secret"
+    assert whatsapp_provider.verify_token == "env-verify"
     assert whatsapp_provider.graph_api_version == "v20.0"
+    assert whatsapp_provider.waba_id == "env-waba-id"
     assert whatsapp_provider.is_active is True
 
 
@@ -50,8 +52,8 @@ def test_seed_providers_from_env_updates_existing_rows_without_duplicating():
 
     assert AIProvider.objects.filter(name="Default").count() == 1
     assert WhatsAppProvider.objects.filter(name="Default").count() == 1
-    assert AIProvider.objects.get(name="Default").get_api_key() == "updated-key"
-    assert WhatsAppProvider.objects.get(name="Default").get_access_token() == "updated-token"
+    assert AIProvider.objects.get(name="Default").api_key == "updated-key"
+    assert WhatsAppProvider.objects.get(name="Default").access_token == "updated-token"
 
 
 @pytest.mark.django_db

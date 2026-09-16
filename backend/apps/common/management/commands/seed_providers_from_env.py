@@ -34,7 +34,7 @@ class Command(BaseCommand):
             provider_type=AIProvider.ProviderType.GEMINI,
             defaults={"is_active": True},
         )
-        provider.set_api_key(settings.GEMINI_API_KEY)
+        provider.api_key = settings.GEMINI_API_KEY
         provider.save()
 
         verb = "Created" if created else "Updated"
@@ -58,14 +58,15 @@ class Command(BaseCommand):
         provider, created = WhatsAppProvider.objects.get_or_create(
             name=name, defaults={"is_active": True}
         )
+        provider.waba_id = settings.WHATSAPP_WABA_ID
         provider.phone_number_id = settings.WHATSAPP_PHONE_NUMBER_ID
         provider.graph_api_version = settings.WHATSAPP_GRAPH_API_VERSION
         if settings.WHATSAPP_ACCESS_TOKEN:
-            provider.set_access_token(settings.WHATSAPP_ACCESS_TOKEN)
+            provider.access_token = settings.WHATSAPP_ACCESS_TOKEN
         if settings.WHATSAPP_APP_SECRET:
-            provider.set_app_secret(settings.WHATSAPP_APP_SECRET)
+            provider.app_secret = settings.WHATSAPP_APP_SECRET
         if settings.WHATSAPP_VERIFY_TOKEN:
-            provider.set_verify_token(settings.WHATSAPP_VERIFY_TOKEN)
+            provider.verify_token = settings.WHATSAPP_VERIFY_TOKEN
         provider.save()
 
         verb = "Created" if created else "Updated"

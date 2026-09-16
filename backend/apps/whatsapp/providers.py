@@ -12,17 +12,19 @@ class WhatsAppCredentials:
     app_secret: str
     verify_token: str
     graph_api_version: str
+    waba_id: str = ""
 
 
 def get_active_credentials() -> WhatsAppCredentials:
     provider = WhatsAppProvider.objects.filter(is_active=True).first()
     if provider:
         return WhatsAppCredentials(
-            access_token=provider.get_access_token(),
+            access_token=provider.access_token,
             phone_number_id=provider.phone_number_id,
-            app_secret=provider.get_app_secret(),
-            verify_token=provider.get_verify_token(),
+            app_secret=provider.app_secret,
+            verify_token=provider.verify_token,
             graph_api_version=provider.graph_api_version,
+            waba_id=provider.waba_id,
         )
     return WhatsAppCredentials(
         access_token=settings.WHATSAPP_ACCESS_TOKEN,
@@ -30,4 +32,5 @@ def get_active_credentials() -> WhatsAppCredentials:
         app_secret=settings.WHATSAPP_APP_SECRET,
         verify_token=settings.WHATSAPP_VERIFY_TOKEN,
         graph_api_version=settings.WHATSAPP_GRAPH_API_VERSION,
+        waba_id=settings.WHATSAPP_WABA_ID,
     )

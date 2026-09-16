@@ -4,29 +4,41 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-from apps.common.encryption import decrypt_value, encrypt_value
-
 from .models import AIProvider, AISession, Message
 from .tasks import answer_whatsapp_question
 
 User = get_user_model()
 
 
-def test_encryption_round_trip():
-    token = encrypt_value("super-secret-key")
-    assert token != "super-secret-key"
-    assert decrypt_value(token) == "super-secret-key"
+@pytest.mark.django_db
+def test_ai_provider_api_key_round_trips_as_plain_text():
+    provider = AIProvider.objects.create(name="Gemini", api_key="abc123")
+
+    provider.refresh_from_db()
+    assert provider.api_key == "abc123"
 
 
 @pytest.mark.django_db
-def test_ai_provider_set_and_get_api_key():
-    provider = AIProvider(name="Gemini")
-    provider.set_api_key("abc123")
-    provider.save()
+def test_saving_active_provider_deactivates_other_active_rows_of_same_type():
+    first = AIProvider.objects.create(
+        name="First", provider_type=AIProvider.ProviderType.GEMINI, is_active=True
+    )
+    second = AIProvider.objects.create(
+        name="Second", provider_type=AIProvider.ProviderType.GEMINI, is_active=True
+    )
 
-    provider.refresh_from_db()
-    assert provider.api_key_encrypted != "abc123"
-    assert provider.get_api_key() == "abc123"
+    first.refresh_from_db()
+    assert first.is_active is False
+    assert second.is_active is True
+
+
+@pytest.mark.django_db
+def test_saving_inactive_provider_does_not_touch_other_rows():
+    active = AIProvider.objects.create(name="Active", is_active=True)
+    AIProvider.objects.create(name="New", is_active=False)
+
+    active.refresh_from_db()
+    assert active.is_active is True
 
 
 @pytest.fixture

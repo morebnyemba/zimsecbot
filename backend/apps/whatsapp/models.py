@@ -1,6 +1,5 @@
 from django.db import models
 
-from apps.common.encryption import decrypt_value, encrypt_value
 from apps.common.models import BaseModel
 
 
@@ -12,10 +11,20 @@ class WhatsAppProvider(BaseModel):
     """
 
     name = models.CharField(max_length=100)
+    waba_id = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        help_text=(
+            "WhatsApp Business Account ID (parent account; a WABA can own multiple phone "
+            "numbers). Not required for sending/receiving messages -- only for account-level "
+            "Graph API calls (message templates, phone number listing)."
+        ),
+    )
     phone_number_id = models.CharField(max_length=64, blank=True, default="")
-    access_token_encrypted = models.TextField(blank=True, default="")
-    app_secret_encrypted = models.TextField(blank=True, default="")
-    verify_token_encrypted = models.TextField(blank=True, default="")
+    access_token = models.TextField(blank=True, default="")
+    app_secret = models.TextField(blank=True, default="")
+    verify_token = models.TextField(blank=True, default="")
     graph_api_version = models.CharField(max_length=10, default="v26.0")
     is_active = models.BooleanField(default=True)
 
@@ -25,23 +34,17 @@ class WhatsAppProvider(BaseModel):
     def __str__(self):
         return self.name
 
-    def set_access_token(self, raw_token: str):
-        self.access_token_encrypted = encrypt_value(raw_token)
-
-    def get_access_token(self) -> str:
-        return decrypt_value(self.access_token_encrypted) if self.access_token_encrypted else ""
-
-    def set_app_secret(self, raw_secret: str):
-        self.app_secret_encrypted = encrypt_value(raw_secret)
-
-    def get_app_secret(self) -> str:
-        return decrypt_value(self.app_secret_encrypted) if self.app_secret_encrypted else ""
-
-    def set_verify_token(self, raw_token: str):
-        self.verify_token_encrypted = encrypt_value(raw_token)
-
-    def get_verify_token(self) -> str:
-        return decrypt_value(self.verify_token_encrypted) if self.verify_token_encrypted else ""
+    def save(self, *args, **kwargs):
+        # Mirrors bubi-rural's MetaAppConfig.save(): get_active_credentials()
+        # just takes .filter(is_active=True).first(), so if two rows were
+        # ever both left active, which one "wins" would be arbitrary and
+        # silent. Enforcing single-active here at the model layer means that
+        # can't happen -- activating one row always deactivates the rest.
+        if self.is_active:
+            WhatsAppProvider.objects.filter(is_active=True).exclude(pk=self.pk).update(
+                is_active=False
+            )
+        super().save(*args, **kwargs)
 
 
 class WebhookEventLog(BaseModel):
