@@ -35,8 +35,18 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    # collectstatic also runs at image build time (Dockerfile), but
+    # static_data below is a named volume: Docker only seeds a named volume
+    # from the image on its *first* creation, so every deploy after the
+    # volume already exists has that stale content shadow whatever the new
+    # build's collectstatic just produced -- a static file added/changed in
+    # this build (e.g. by a new admin theme package) silently never reaches
+    # the running container. Re-running it here, against the mounted
+    # volume, at every container start closes that gap regardless of the
+    # volume's prior state.
     command: >
       sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --access-logfile - --error-logfile -"
     healthcheck:
       # Without this, `docker compose up --wait` (and celery/nginx's
