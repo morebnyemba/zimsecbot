@@ -5,7 +5,7 @@ from .models import AIProvider
 
 
 class GeminiProvider:
-    def __init__(self, api_key: str, model_name: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: str, model_name: str = "gemini-3.6-flash"):
         self._client = genai.Client(api_key=api_key)
         self._model_name = model_name
 
