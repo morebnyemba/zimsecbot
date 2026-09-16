@@ -31,6 +31,29 @@ def test_ai_provider_set_and_get_api_key():
 
 
 @pytest.mark.django_db
+def test_saving_active_provider_deactivates_other_active_rows_of_same_type():
+    first = AIProvider.objects.create(
+        name="First", provider_type=AIProvider.ProviderType.GEMINI, is_active=True
+    )
+    second = AIProvider.objects.create(
+        name="Second", provider_type=AIProvider.ProviderType.GEMINI, is_active=True
+    )
+
+    first.refresh_from_db()
+    assert first.is_active is False
+    assert second.is_active is True
+
+
+@pytest.mark.django_db
+def test_saving_inactive_provider_does_not_touch_other_rows():
+    active = AIProvider.objects.create(name="Active", is_active=True)
+    AIProvider.objects.create(name="New", is_active=False)
+
+    active.refresh_from_db()
+    assert active.is_active is True
+
+
+@pytest.mark.django_db
 def test_admin_api_key_status_reflects_unset_and_set():
     admin = AIProviderAdmin(AIProvider, None)
 

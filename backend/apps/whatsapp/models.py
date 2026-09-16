@@ -12,6 +12,16 @@ class WhatsAppProvider(BaseModel):
     """
 
     name = models.CharField(max_length=100)
+    waba_id = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        help_text=(
+            "WhatsApp Business Account ID (parent account; a WABA can own multiple phone "
+            "numbers). Not required for sending/receiving messages -- only for account-level "
+            "Graph API calls (message templates, phone number listing)."
+        ),
+    )
     phone_number_id = models.CharField(max_length=64, blank=True, default="")
     access_token_encrypted = models.TextField(blank=True, default="")
     app_secret_encrypted = models.TextField(blank=True, default="")
@@ -24,6 +34,18 @@ class WhatsAppProvider(BaseModel):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # Mirrors bubi-rural's MetaAppConfig.save(): get_active_credentials()
+        # just takes .filter(is_active=True).first(), so if two rows were
+        # ever both left active, which one "wins" would be arbitrary and
+        # silent. Enforcing single-active here at the model layer means that
+        # can't happen -- activating one row always deactivates the rest.
+        if self.is_active:
+            WhatsAppProvider.objects.filter(is_active=True).exclude(pk=self.pk).update(
+                is_active=False
+            )
+        super().save(*args, **kwargs)
 
     def set_access_token(self, raw_token: str):
         self.access_token_encrypted = encrypt_value(raw_token)

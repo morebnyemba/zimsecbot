@@ -58,6 +58,7 @@ class Command(BaseCommand):
         provider, created = WhatsAppProvider.objects.get_or_create(
             name=name, defaults={"is_active": True}
         )
+        provider.waba_id = settings.WHATSAPP_WABA_ID
         provider.phone_number_id = settings.WHATSAPP_PHONE_NUMBER_ID
         provider.graph_api_version = settings.WHATSAPP_GRAPH_API_VERSION
         if settings.WHATSAPP_ACCESS_TOKEN:

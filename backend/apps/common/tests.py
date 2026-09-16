@@ -23,6 +23,7 @@ def test_health_check_returns_ok():
     WHATSAPP_APP_SECRET="env-secret",
     WHATSAPP_VERIFY_TOKEN="env-verify",
     WHATSAPP_GRAPH_API_VERSION="v20.0",
+    WHATSAPP_WABA_ID="env-waba-id",
 )
 def test_seed_providers_from_env_creates_provider_rows():
     call_command("seed_providers_from_env")
@@ -37,6 +38,7 @@ def test_seed_providers_from_env_creates_provider_rows():
     assert whatsapp_provider.get_app_secret() == "env-secret"
     assert whatsapp_provider.get_verify_token() == "env-verify"
     assert whatsapp_provider.graph_api_version == "v20.0"
+    assert whatsapp_provider.waba_id == "env-waba-id"
     assert whatsapp_provider.is_active is True
 
 

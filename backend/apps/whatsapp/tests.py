@@ -184,7 +184,10 @@ def test_get_active_credentials_falls_back_to_settings_when_no_active_provider()
 @override_settings(WHATSAPP_ACCESS_TOKEN="env-token")
 def test_get_active_credentials_prefers_active_db_provider_over_settings():
     provider = WhatsAppProvider(
-        name="Prod", phone_number_id="db-phone-id", graph_api_version="v26.0"
+        name="Prod",
+        waba_id="waba-123",
+        phone_number_id="db-phone-id",
+        graph_api_version="v26.0",
     )
     provider.set_access_token("db-token")
     provider.set_app_secret("db-secret")
@@ -196,6 +199,7 @@ def test_get_active_credentials_prefers_active_db_provider_over_settings():
     assert credentials.access_token == "db-token"
     assert credentials.phone_number_id == "db-phone-id"
     assert credentials.graph_api_version == "v26.0"
+    assert credentials.waba_id == "waba-123"
 
 
 @pytest.mark.django_db
@@ -207,6 +211,25 @@ def test_get_active_credentials_ignores_inactive_db_provider():
     credentials = get_active_credentials()
 
     assert credentials.access_token != "should-not-be-used"
+
+
+@pytest.mark.django_db
+def test_saving_active_provider_deactivates_other_active_rows():
+    first = WhatsAppProvider.objects.create(name="First", is_active=True)
+    second = WhatsAppProvider.objects.create(name="Second", is_active=True)
+
+    first.refresh_from_db()
+    assert first.is_active is False
+    assert second.is_active is True
+
+
+@pytest.mark.django_db
+def test_saving_inactive_provider_does_not_touch_other_rows():
+    active = WhatsAppProvider.objects.create(name="Active", is_active=True)
+    WhatsAppProvider.objects.create(name="New", is_active=False)
+
+    active.refresh_from_db()
+    assert active.is_active is True
 
 
 @pytest.mark.django_db

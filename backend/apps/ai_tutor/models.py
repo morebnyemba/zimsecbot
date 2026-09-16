@@ -23,6 +23,19 @@ class AIProvider(BaseModel):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        # Mirrors bubi-rural's MetaAppConfig.save() / WhatsAppProvider.save():
+        # get_active_provider() takes .filter(is_active=True, provider_type=...)
+        # .first(), so two active rows of the same provider_type would make
+        # "which one wins" arbitrary and silent. Scoped by provider_type so
+        # future non-Gemini provider types (if any) don't fight over the
+        # single active slot with each other.
+        if self.is_active:
+            AIProvider.objects.filter(
+                is_active=True, provider_type=self.provider_type
+            ).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
     def set_api_key(self, raw_key: str):
         self.api_key_encrypted = encrypt_value(raw_key)
 

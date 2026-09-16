@@ -25,6 +25,7 @@ class WhatsAppProviderForm(forms.ModelForm):
         model = WhatsAppProvider
         fields = [
             "name",
+            "waba_id",
             "phone_number_id",
             "graph_api_version",
             "is_active",
@@ -51,6 +52,7 @@ class WhatsAppProviderAdmin(admin.ModelAdmin):
     form = WhatsAppProviderForm
     list_display = (
         "name",
+        "waba_id",
         "phone_number_id",
         "graph_api_version",
         "is_active",
@@ -61,7 +63,10 @@ class WhatsAppProviderAdmin(admin.ModelAdmin):
     list_filter = ("is_active",)
     readonly_fields = ("access_token_status", "app_secret_status", "verify_token_status")
     fieldsets = (
-        (None, {"fields": ("name", "phone_number_id", "graph_api_version", "is_active")}),
+        (
+            None,
+            {"fields": ("name", "waba_id", "phone_number_id", "graph_api_version", "is_active")},
+        ),
         (
             "Credentials",
             {
