@@ -15,6 +15,16 @@ def test_health_check_returns_ok():
     assert response.data == {"status": "ok", "checks": {"database": True, "cache": True}}
 
 
+@override_settings(ALLOWED_HOSTS=["testserver"])
+def test_admin_login_renders_with_unfold_theme():
+    response = APIClient().get("/admin/login/")
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Zimfundi" in content
+    assert "unfold" in content.lower()
+
+
 @pytest.mark.django_db
 @override_settings(
     GEMINI_API_KEY="env-gemini-key",
