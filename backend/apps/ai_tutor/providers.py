@@ -15,6 +15,20 @@ class GeminiProvider:
         return response.text
 
 
+def get_active_api_key() -> str:
+    """The Gemini API key any Gemini caller should use -- an active DB
+    AIProvider row takes precedence over GEMINI_API_KEY, same precedence
+    used for WhatsApp credentials (apps.whatsapp.providers). Shared with
+    apps.knowledge_base.embeddings so embedding calls use the same,
+    admin-rotatable key as chat generation instead of silently reading the
+    (possibly stale/unset) env var on its own.
+    """
+    provider = AIProvider.objects.filter(
+        is_active=True, provider_type=AIProvider.ProviderType.GEMINI
+    ).first()
+    return provider.api_key if provider else settings.GEMINI_API_KEY
+
+
 def get_active_provider() -> GeminiProvider:
     provider = AIProvider.objects.filter(
         is_active=True, provider_type=AIProvider.ProviderType.GEMINI
