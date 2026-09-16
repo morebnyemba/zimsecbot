@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Inbox, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -87,6 +88,8 @@ interface CrudPageProps<T extends RecordWithId> {
   endpoint: string;
   fields: FieldConfig[];
   columns: ColumnConfig<T>[];
+  /** Extra buttons/links rendered next to "New" in the header, e.g. an import shortcut. */
+  headerActions?: ReactNode;
 }
 
 export function CrudPage<T extends RecordWithId>({
@@ -94,6 +97,7 @@ export function CrudPage<T extends RecordWithId>({
   endpoint,
   fields,
   columns,
+  headerActions,
 }: CrudPageProps<T>) {
   const [items, setItems] = useState<T[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
@@ -278,13 +282,16 @@ export function CrudPage<T extends RecordWithId>({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">{title}</h1>
-        <button
-          onClick={openCreateForm}
-          className="flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
-        >
-          <Plus size={16} />
-          New
-        </button>
+        <div className="flex items-center gap-2">
+          {headerActions}
+          <button
+            onClick={openCreateForm}
+            className="flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+          >
+            <Plus size={16} />
+            New
+          </button>
+        </div>
       </div>
 
       {editingId && (

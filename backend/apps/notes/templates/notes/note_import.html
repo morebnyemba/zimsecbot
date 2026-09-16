@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <p>Extract text from a PDF file or a web page URL into a new draft Note. Review and edit
+  the extracted content, then mark it Published to index it into the AI Tutor's knowledge
+  base.</p>
+
+  {% if form.non_field_errors %}
+    <ul class="errorlist">
+      {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div>
+      {{ form.as_p }}
+    </div>
+    <input type="submit" value="Import" class="default">
+  </form>
+{% endblock %}

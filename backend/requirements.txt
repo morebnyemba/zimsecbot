@@ -14,6 +14,8 @@ django-prometheus==2.3.1
 django-unfold==0.91.0
 pgvector==0.3.2
 google-genai==1.21.0
+pypdf==6.19.0
+trafilatura==2.2.0
 requests==2.33.0
 gunicorn==23.0.0
 whitenoise==6.7.0
