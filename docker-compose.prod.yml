@@ -59,7 +59,13 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-    command: celery -A config worker -l info
+    # -Q must list every queue named in CELERY_TASK_ROUTES (config/settings.py)
+    # plus the "celery" default -- Celery only consumes the default queue
+    # without an explicit -Q, so apps.whatsapp/.ai_tutor/.analytics/.billing
+    # tasks (routed to their own named queues) would enqueue successfully
+    # and then sit unconsumed in Redis forever, with no error anywhere,
+    # since this is the only worker process in this deployment.
+    command: celery -A config worker -l info -Q celery,whatsapp,ai,analytics,billing
 
   celery_beat:
     build: ./backend

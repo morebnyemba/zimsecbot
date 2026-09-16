@@ -1,4 +1,7 @@
+import re
+
 import pytest
+from django.conf import settings
 from django.core.management import call_command
 from django.test import override_settings
 from rest_framework.test import APIClient
@@ -74,3 +77,33 @@ def test_seed_providers_from_env_skips_when_no_env_vars_set():
 
     assert not AIProvider.objects.exists()
     assert not WhatsAppProvider.objects.exists()
+
+
+@pytest.mark.parametrize("compose_file", ["docker-compose.yml", "docker-compose.prod.yml"])
+def test_celery_worker_consumes_every_routed_queue(compose_file):
+    """CELERY_TASK_ROUTES sends tasks to named queues (whatsapp/ai/etc.);
+    without a matching `-Q` on the worker's command, Celery only consumes
+    the "celery" default -- those tasks enqueue successfully and then sit
+    unconsumed in Redis forever, with no error anywhere. This caught a real
+    production incident (WhatsApp never marking messages read/replying)
+    that was invisible everywhere except "the task never seems to run".
+    """
+    compose_path = settings.BASE_DIR.parent / compose_file
+    compose_text = compose_path.read_text()
+
+    worker_block_match = re.search(
+        r"celery_worker:.*?(?=\n  \w[\w_]*:|\Z)", compose_text, re.DOTALL
+    )
+    assert worker_block_match, f"no celery_worker service found in {compose_file}"
+    worker_block = worker_block_match.group(0)
+
+    command_match = re.search(r"command:\s*(.+)", worker_block)
+    assert command_match, f"celery_worker has no command in {compose_file}"
+    command = command_match.group(1)
+
+    routed_queues = {route["queue"] for route in settings.CELERY_TASK_ROUTES.values()}
+    for queue in routed_queues:
+        assert re.search(rf"-Q[= ][\w,]*\b{queue}\b", command), (
+            f"queue '{queue}' is routed to in CELERY_TASK_ROUTES but the "
+            f"celery_worker command in {compose_file} doesn't consume it: {command!r}"
+        )
