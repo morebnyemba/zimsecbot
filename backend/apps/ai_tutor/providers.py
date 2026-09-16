@@ -20,5 +20,5 @@ def get_active_provider() -> GeminiProvider:
         is_active=True, provider_type=AIProvider.ProviderType.GEMINI
     ).first()
     if provider:
-        return GeminiProvider(api_key=provider.get_api_key(), model_name=provider.model_name)
+        return GeminiProvider(api_key=provider.api_key, model_name=provider.model_name)
     return GeminiProvider(api_key=settings.GEMINI_API_KEY)

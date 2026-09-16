@@ -1,6 +1,5 @@
 from django.db import models
 
-from apps.common.encryption import decrypt_value, encrypt_value
 from apps.common.models import BaseModel
 
 
@@ -23,9 +22,9 @@ class WhatsAppProvider(BaseModel):
         ),
     )
     phone_number_id = models.CharField(max_length=64, blank=True, default="")
-    access_token_encrypted = models.TextField(blank=True, default="")
-    app_secret_encrypted = models.TextField(blank=True, default="")
-    verify_token_encrypted = models.TextField(blank=True, default="")
+    access_token = models.TextField(blank=True, default="")
+    app_secret = models.TextField(blank=True, default="")
+    verify_token = models.TextField(blank=True, default="")
     graph_api_version = models.CharField(max_length=10, default="v26.0")
     is_active = models.BooleanField(default=True)
 
@@ -46,24 +45,6 @@ class WhatsAppProvider(BaseModel):
                 is_active=False
             )
         super().save(*args, **kwargs)
-
-    def set_access_token(self, raw_token: str):
-        self.access_token_encrypted = encrypt_value(raw_token)
-
-    def get_access_token(self) -> str:
-        return decrypt_value(self.access_token_encrypted) if self.access_token_encrypted else ""
-
-    def set_app_secret(self, raw_secret: str):
-        self.app_secret_encrypted = encrypt_value(raw_secret)
-
-    def get_app_secret(self) -> str:
-        return decrypt_value(self.app_secret_encrypted) if self.app_secret_encrypted else ""
-
-    def set_verify_token(self, raw_token: str):
-        self.verify_token_encrypted = encrypt_value(raw_token)
-
-    def get_verify_token(self) -> str:
-        return decrypt_value(self.verify_token_encrypted) if self.verify_token_encrypted else ""
 
 
 class WebhookEventLog(BaseModel):

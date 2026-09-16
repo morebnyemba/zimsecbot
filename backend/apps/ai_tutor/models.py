@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.db import models
 
-from apps.common.encryption import decrypt_value, encrypt_value
 from apps.common.models import BaseModel
 
 
@@ -14,7 +13,7 @@ class AIProvider(BaseModel):
         max_length=20, choices=ProviderType.choices, default=ProviderType.GEMINI
     )
     model_name = models.CharField(max_length=100, default="gemini-1.5-flash")
-    api_key_encrypted = models.TextField()
+    api_key = models.TextField(blank=True, default="")
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -35,12 +34,6 @@ class AIProvider(BaseModel):
                 is_active=True, provider_type=self.provider_type
             ).exclude(pk=self.pk).update(is_active=False)
         super().save(*args, **kwargs)
-
-    def set_api_key(self, raw_key: str):
-        self.api_key_encrypted = encrypt_value(raw_key)
-
-    def get_api_key(self) -> str:
-        return decrypt_value(self.api_key_encrypted)
 
 
 class AISession(BaseModel):
